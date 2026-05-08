@@ -40,6 +40,8 @@ import TransferModal from './modals/TransferModal';
 import PaymentConfirmModal from './modals/PaymentConfirmModal';
 import TopupHistoryModal from './modals/TopupHistoryModal';
 
+const CARD_SHOP_URL = 'https://pay.ldxp.cn/shop/FU5RW93N';
+
 const TopUp = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -187,6 +189,10 @@ const TopUp = () => {
       return;
     }
     window.open(topUpLink, '_blank');
+  };
+
+  const openCardShop = () => {
+    window.open(CARD_SHOP_URL, '_blank');
   };
 
   const preTopUp = async (payment) => {
@@ -972,6 +978,8 @@ const TopUp = () => {
           isSubmitting={isSubmitting}
           topUpLink={topUpLink}
           openTopUpLink={openTopUpLink}
+          cardShopUrl={CARD_SHOP_URL}
+          openCardShop={openCardShop}
           userState={userState}
           renderQuota={renderQuota}
           statusLoading={statusLoading}

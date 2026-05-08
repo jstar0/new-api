@@ -80,6 +80,7 @@ const RegisterForm = () => {
     email: '',
     verification_code: '',
     wechat_verification_code: '',
+    aff_code: '',
   });
   const { username, password, password2 } = inputs;
   const [userState, userDispatch] = useContext(UserContext);
@@ -114,10 +115,13 @@ const RegisterForm = () => {
   const logo = getLogo();
   const systemName = getSystemName();
 
-  let affCode = new URLSearchParams(window.location.search).get('aff');
-  if (affCode) {
-    localStorage.setItem('aff', affCode);
-  }
+  const affCode = useMemo(() => {
+    return (
+      new URLSearchParams(window.location.search).get('aff') ||
+      localStorage.getItem('aff') ||
+      ''
+    );
+  }, []);
 
   const status = useMemo(() => {
     if (statusState?.status) return statusState.status;
@@ -154,6 +158,14 @@ const RegisterForm = () => {
     setHasUserAgreement(status?.user_agreement_enabled || false);
     setHasPrivacyPolicy(status?.privacy_policy_enabled || false);
   }, [status]);
+
+  useEffect(() => {
+    if (!affCode) {
+      return;
+    }
+    localStorage.setItem('aff', affCode);
+    setInputs((inputs) => ({ ...inputs, aff_code: inputs.aff_code || affCode }));
+  }, [affCode]);
 
   useEffect(() => {
     let countdownInterval = null;
@@ -231,13 +243,13 @@ const RegisterForm = () => {
       }
       setRegisterLoading(true);
       try {
-        if (!affCode) {
-          affCode = localStorage.getItem('aff');
-        }
-        inputs.aff_code = affCode;
+        const payload = {
+          ...inputs,
+          aff_code: inputs.aff_code?.trim() || localStorage.getItem('aff'),
+        };
         const res = await API.post(
           `/api/user/register?turnstile=${turnstileToken}`,
-          inputs,
+          payload,
         );
         const { success, message } = res.data;
         if (success) {
@@ -600,6 +612,16 @@ const RegisterForm = () => {
                   mode='password'
                   onChange={(value) => handleChange('password2', value)}
                   prefix={<IconLock />}
+                />
+
+                <Form.Input
+                  field='aff_code'
+                  label={t('邀请码')}
+                  placeholder={t('请输入邀请码（选填）')}
+                  name='aff_code'
+                  value={inputs.aff_code}
+                  onChange={(value) => handleChange('aff_code', value.trim())}
+                  prefix={<IconKey />}
                 />
 
                 {showEmailVerification && (
