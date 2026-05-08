@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearch } from '@tanstack/react-router'
 import type { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -35,13 +36,17 @@ import { registerFormSchema } from '@/features/auth/constants'
 import { useAuthRedirect } from '@/features/auth/hooks/use-auth-redirect'
 import { useEmailVerification } from '@/features/auth/hooks/use-email-verification'
 import { useTurnstile } from '@/features/auth/hooks/use-turnstile'
-import { getAffiliateCode } from '@/features/auth/lib/storage'
+import {
+  getAffiliateCode,
+  saveAffiliateCode,
+} from '@/features/auth/lib/storage'
 
 export function SignUpForm({
   className,
   ...props
 }: React.HTMLAttributes<HTMLFormElement>) {
   const { t } = useTranslation()
+  const search = useSearch({ strict: false }) as { aff?: string }
   const [isLoading, setIsLoading] = useState(false)
   const [verificationCode, setVerificationCode] = useState('')
   const [agreedToLegal, setAgreedToLegal] = useState(false)
@@ -76,6 +81,7 @@ export function SignUpForm({
       email: '',
       password: '',
       confirmPassword: '',
+      aff: '',
     },
   })
 
@@ -112,6 +118,13 @@ export function SignUpForm({
     }
   }, [requiresLegalConsent])
 
+  useEffect(() => {
+    const affCode = search?.aff || getAffiliateCode()
+    if (!affCode) return
+    saveAffiliateCode(affCode)
+    form.setValue('aff', affCode)
+  }, [form, search?.aff])
+
   async function onSubmit(data: z.infer<typeof registerFormSchema>) {
     if (requiresLegalConsent && !agreedToLegal) {
       toast.error(legalConsentErrorMessage)
@@ -137,7 +150,7 @@ export function SignUpForm({
         password: data.password,
         email: data.email || undefined,
         verification_code: verificationCode || undefined,
-        aff: getAffiliateCode(),
+        aff: data.aff?.trim() || getAffiliateCode(),
         turnstile: turnstileToken,
       })
 
@@ -245,6 +258,28 @@ export function SignUpForm({
               <FormLabel>{t('Confirm password')}</FormLabel>
               <FormControl>
                 <PasswordInput placeholder={t('Confirm password')} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name='aff'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('Invitation Code')}</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder={t('Enter invitation code')}
+                  {...field}
+                  onChange={(event) => {
+                    const value = event.target.value.trim()
+                    field.onChange(value)
+                    if (value) saveAffiliateCode(value)
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

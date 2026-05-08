@@ -44,6 +44,7 @@ import {
   TrendingUp,
   Receipt,
   Sparkles,
+  ShoppingCart,
 } from 'lucide-react';
 import { IconGift } from '@douyinfe/semi-icons';
 import { useMinimumLoadingTime } from '../../hooks/common/useMinimumLoadingTime';
@@ -82,6 +83,8 @@ const RechargeCard = ({
   isSubmitting,
   topUpLink,
   openTopUpLink,
+  cardShopUrl,
+  openCardShop,
   userState,
   renderQuota,
   statusLoading,
@@ -574,6 +577,26 @@ const RechargeCard = ({
           </Text>
         }
       >
+        {cardShopUrl && (
+          <div className='mb-3 flex flex-col gap-3 rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='min-w-0'>
+              <Text strong>{t('卡密充值')}</Text>
+              <div className='mt-1'>
+                <Text type='tertiary' size='small'>
+                  {t('购买卡密后复制兑换码，在下方输入兑换。')}
+                </Text>
+              </div>
+            </div>
+            <Button
+              icon={<ShoppingCart size={14} />}
+              theme='solid'
+              type='primary'
+              onClick={openCardShop}
+            >
+              {t('购买卡密')}
+            </Button>
+          </div>
+        )}
         <Form
           getFormApi={(api) => (redeemFormApiRef.current = api)}
           initValues={{ redemptionCode: redemptionCode }}
