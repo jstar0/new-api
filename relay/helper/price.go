@@ -2,6 +2,7 @@ package helper
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
@@ -121,6 +122,8 @@ func ModelPriceHelper(c *gin.Context, info *relaycommon.RelayInfo, promptTokens 
 	}
 
 	// check if free model pre-consume is disabled
+	preConsumedQuota = int(math.Round(float64(preConsumedQuota) * ratio_setting.GetGroupBillingMultiplier(info.UsingGroup)))
+
 	if !operation_setting.GetQuotaSetting().EnableFreeModelPreConsume {
 		// if model price or ratio is 0, do not pre-consume quota
 		if groupRatioInfo.GroupRatio == 0 {
@@ -212,6 +215,7 @@ func ModelPriceHelperPerCall(c *gin.Context, info *relaycommon.RelayInfo) (types
 			}
 		}
 	}
+	quota = int(math.Round(float64(quota) * ratio_setting.GetGroupBillingMultiplier(info.UsingGroup)))
 
 	priceData := types.PriceData{
 		FreeModel:      freeModel,
@@ -266,6 +270,7 @@ func modelPriceHelperTiered(c *gin.Context, info *relaycommon.RelayInfo, promptT
 	// Expression coefficients are $/1M tokens prices; convert to quota the same way per-call billing does.
 	quotaBeforeGroup := rawCost / 1_000_000 * common.QuotaPerUnit
 	preConsumedQuota := billingexpr.QuotaRound(quotaBeforeGroup * groupRatioInfo.GroupRatio)
+	preConsumedQuota = int(math.Round(float64(preConsumedQuota) * ratio_setting.GetGroupBillingMultiplier(info.UsingGroup)))
 
 	freeModel := false
 	if !operation_setting.GetQuotaSetting().EnableFreeModelPreConsume {

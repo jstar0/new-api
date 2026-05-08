@@ -1700,8 +1700,9 @@ export function renderModelPrice(opts) {
     const completionRatioPrice = modelRatio * 2.0 * completionRatio;
     const cacheRatioPrice = modelRatio * 2.0 * cacheRatio;
     const imageRatioPrice = modelRatio * 2.0 * imageRatio;
+    const nonCacheInputTokens = Math.max(inputTokens - cacheTokens, 0);
     let effectiveInputTokens =
-        inputTokens - cacheTokens + cacheTokens * cacheRatio;
+        nonCacheInputTokens + cacheTokens * cacheRatio;
     if (image && imageOutputTokens > 0) {
       effectiveInputTokens =
           inputTokens - imageOutputTokens + imageOutputTokens * imageRatio;
@@ -1733,7 +1734,7 @@ export function renderModelPrice(opts) {
       inputDesc = buildBillingText(
           '(输入 {{nonCacheInput}} tokens / 1M tokens * {{symbol}}{{price}} + 缓存 {{cacheInput}} tokens / 1M tokens * {{symbol}}{{cachePrice}}',
           {
-            nonCacheInput: inputTokens - cacheTokens,
+            nonCacheInput: nonCacheInputTokens,
             cacheInput: cacheTokens,
             symbol,
             price: formatBillingDisplayPrice(inputRatioPrice, rate),
@@ -2510,8 +2511,9 @@ export function renderAudioModelPrice(opts) {
 
     const inputRatioPrice = modelRatio * 2.0;
     const completionRatioPrice = modelRatio * 2.0 * completionRatio;
+    const nonCacheInputTokens = Math.max(inputTokens - cacheTokens, 0);
     const textPrice =
-        ((inputTokens - cacheTokens + cacheTokens * cacheRatio) / 1000000) *
+        ((nonCacheInputTokens + cacheTokens * cacheRatio) / 1000000) *
         inputRatioPrice *
         groupRatio +
         (completionTokens / 1000000) * completionRatioPrice * groupRatio;
@@ -2604,8 +2606,9 @@ export function renderAudioModelPrice(opts) {
   const inputRatioPrice = modelRatio * 2.0;
   const completionRatioPrice = modelRatio * 2.0 * completionRatioValue;
 
+  const nonCacheInputTokens = Math.max(inputTokens - cacheTokens, 0);
   const effectiveInputTokens =
-      inputTokens - cacheTokens + cacheTokens * cacheRatioValue;
+      nonCacheInputTokens + cacheTokens * cacheRatioValue;
 
   const textPrice =
       (effectiveInputTokens / 1000000) * inputRatioPrice * groupRatio +

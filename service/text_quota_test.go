@@ -9,6 +9,7 @@ import (
 	"github.com/QuantumNous/new-api/dto"
 	"github.com/QuantumNous/new-api/pkg/billingexpr"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
+	"github.com/QuantumNous/new-api/setting/ratio_setting"
 	"github.com/QuantumNous/new-api/types"
 
 	"github.com/gin-gonic/gin"
@@ -205,6 +206,80 @@ func TestCalculateTextQuotaSummaryHandlesLegacyClaudeDerivedOpenAIUsage(t *testi
 
 	// 62 + 3544*0.1 + 586*1.25 + 95*5 = 1624.9 => 1624
 	require.Equal(t, 1624, summary.Quota)
+}
+
+func TestCalculateTextQuotaSummaryHandlesLegacyClaudeCacheReadOnlyUsage(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+
+	relayInfo := &relaycommon.RelayInfo{
+		RelayFormat:     types.RelayFormatOpenAI,
+		OriginModelName: "claude-opus-4.7",
+		PriceData: types.PriceData{
+			ModelRatio:      2.5,
+			CompletionRatio: 5,
+			CacheRatio:      0.1,
+			GroupRatioInfo:  types.GroupRatioInfo{GroupRatio: 0.5},
+		},
+		StartTime: time.Now(),
+	}
+
+	usage := &dto.Usage{
+		PromptTokens:     1851,
+		CompletionTokens: 40,
+		PromptTokensDetails: dto.InputTokenDetails{
+			CachedTokens: 20647,
+		},
+	}
+
+	summary := calculateTextQuotaSummary(ctx, relayInfo, usage)
+
+	// Claude usage reports text input separately from cache read tokens. If this
+	// legacy path is misclassified as OpenAI-style total prompt tokens, billing
+	// subtracts cache from prompt and collapses to the minimum quota.
+	// (1851 + 20647*0.1 + 40*5) * 2.5 * 0.5 = 5144.625 => 5145
+	require.Equal(t, 5145, summary.Quota)
+}
+
+func TestCalculateTextQuotaSummaryAppliesHiddenGroupBillingMultiplier(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	require.NoError(t, ratio_setting.UpdateGroupBillingMultiplierByJSONString(`{"kiro-cc":4.3}`))
+	t.Cleanup(func() {
+		require.NoError(t, ratio_setting.UpdateGroupBillingMultiplierByJSONString(`{}`))
+	})
+
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+
+	relayInfo := &relaycommon.RelayInfo{
+		RelayFormat:     types.RelayFormatOpenAI,
+		UsingGroup:      "kiro-cc",
+		OriginModelName: "claude-opus-4.6",
+		PriceData: types.PriceData{
+			ModelRatio:      2.5,
+			CompletionRatio: 5,
+			CacheRatio:      0.1,
+			GroupRatioInfo:  types.GroupRatioInfo{GroupRatio: 0.4},
+		},
+		StartTime: time.Now(),
+	}
+
+	usage := &dto.Usage{
+		PromptTokens:     2158,
+		CompletionTokens: 1258,
+		PromptTokensDetails: dto.InputTokenDetails{
+			CachedTokens: 24068,
+		},
+		UsageSemantic: "anthropic",
+	}
+
+	summary := calculateTextQuotaSummary(ctx, relayInfo, usage)
+
+	// Base quota is 10855, matching the visible 0.4x group ratio. The hidden
+	// Kiro multiplier keeps the visible ratio low while raising actual billing.
+	require.Equal(t, 4.3, summary.GroupBillingMultiplier)
+	require.Equal(t, 46677, summary.Quota)
 }
 
 func TestCalculateTextQuotaSummarySeparatesOpenRouterCacheReadFromPromptBilling(t *testing.T) {

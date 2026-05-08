@@ -14,6 +14,7 @@ import (
 	perfmetrics "github.com/QuantumNous/new-api/pkg/perf_metrics"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
+	"github.com/QuantumNous/new-api/setting/ratio_setting"
 	"github.com/QuantumNous/new-api/types"
 
 	"github.com/bytedance/gopkg/util/gopool"
@@ -39,6 +40,7 @@ type textQuotaSummary struct {
 	ImageRatio               float64
 	ModelRatio               float64
 	GroupRatio               float64
+	GroupBillingMultiplier   float64
 	ModelPrice               float64
 	CacheCreationRatio       float64
 	CacheCreationRatio5m     float64
@@ -78,7 +80,18 @@ func isLegacyClaudeDerivedOpenAIUsage(relayInfo *relaycommon.RelayInfo, usage *d
 	if usage.UsageSource != "" || usage.UsageSemantic != "" {
 		return false
 	}
-	return usage.ClaudeCacheCreation5mTokens > 0 || usage.ClaudeCacheCreation1hTokens > 0
+	if usage.ClaudeCacheCreation5mTokens > 0 || usage.ClaudeCacheCreation1hTokens > 0 {
+		return true
+	}
+	return strings.Contains(strings.ToLower(relayInfo.OriginModelName), "claude") &&
+		usage.PromptTokensDetails.CachedTokens > usage.PromptTokens
+}
+
+func applyGroupBillingMultiplier(quota int, multiplier float64) int {
+	if quota == 0 || multiplier <= 0 || multiplier == 1 {
+		return quota
+	}
+	return int(decimal.NewFromInt(int64(quota)).Mul(decimal.NewFromFloat(multiplier)).Round(0).IntPart())
 }
 
 func calculateTextToolCallSurcharge(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, summary *textQuotaSummary) decimal.Decimal {
@@ -158,14 +171,17 @@ func composeTieredTextQuota(relayInfo *relaycommon.RelayInfo, summary textQuotaS
 
 func calculateTextQuotaSummary(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, usage *dto.Usage) textQuotaSummary {
 	summary := textQuotaSummary{
-		ModelName:            relayInfo.OriginModelName,
-		TokenName:            ctx.GetString("token_name"),
-		UseTimeSeconds:       time.Now().Unix() - relayInfo.StartTime.Unix(),
-		CompletionRatio:      relayInfo.PriceData.CompletionRatio,
-		CacheRatio:           relayInfo.PriceData.CacheRatio,
-		ImageRatio:           relayInfo.PriceData.ImageRatio,
-		ModelRatio:           relayInfo.PriceData.ModelRatio,
-		GroupRatio:           relayInfo.PriceData.GroupRatioInfo.GroupRatio,
+		ModelName:       relayInfo.OriginModelName,
+		TokenName:       ctx.GetString("token_name"),
+		UseTimeSeconds:  time.Now().Unix() - relayInfo.StartTime.Unix(),
+		CompletionRatio: relayInfo.PriceData.CompletionRatio,
+		CacheRatio:      relayInfo.PriceData.CacheRatio,
+		ImageRatio:      relayInfo.PriceData.ImageRatio,
+		ModelRatio:      relayInfo.PriceData.ModelRatio,
+		GroupRatio:      relayInfo.PriceData.GroupRatioInfo.GroupRatio,
+		GroupBillingMultiplier: ratio_setting.GetGroupBillingMultiplier(
+			relayInfo.UsingGroup,
+		),
 		ModelPrice:           relayInfo.PriceData.ModelPrice,
 		CacheCreationRatio:   relayInfo.PriceData.CacheCreationRatio,
 		CacheCreationRatio5m: relayInfo.PriceData.CacheCreation5mRatio,
@@ -192,6 +208,10 @@ func calculateTextQuotaSummary(ctx *gin.Context, relayInfo *relaycommon.RelayInf
 	summary.ImageTokens = usage.PromptTokensDetails.ImageTokens
 	summary.AudioTokens = usage.PromptTokensDetails.AudioTokens
 	legacyClaudeDerived := isLegacyClaudeDerivedOpenAIUsage(relayInfo, usage)
+	if legacyClaudeDerived {
+		summary.UsageSemantic = "anthropic"
+		summary.IsClaudeUsageSemantic = true
+	}
 	isOpenRouterClaudeBilling := relayInfo.ChannelMeta != nil &&
 		relayInfo.ChannelType == constant.ChannelTypeOpenRouter &&
 		summary.IsClaudeUsageSemantic
@@ -299,6 +319,7 @@ func calculateTextQuotaSummary(ctx *gin.Context, relayInfo *relaycommon.RelayInf
 		}
 		summary.Quota = int(quotaCalculateDecimal.Round(0).IntPart())
 	}
+	summary.Quota = applyGroupBillingMultiplier(summary.Quota, summary.GroupBillingMultiplier)
 
 	if summary.TotalTokens == 0 {
 		summary.Quota = 0
@@ -400,6 +421,9 @@ func PostTextConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, us
 	}
 	if adminRejectReason != "" {
 		other["reject_reason"] = adminRejectReason
+	}
+	if summary.GroupBillingMultiplier != 1 {
+		other["group_billing_multiplier"] = summary.GroupBillingMultiplier
 	}
 	if summary.ImageTokens != 0 {
 		other["image"] = true

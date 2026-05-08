@@ -27,7 +27,7 @@ import HeaderLogo from './HeaderLogo';
 import Navigation from './Navigation';
 import ActionButtons from './ActionButtons';
 
-const HeaderBar = ({ onMobileMenuToggle, drawerOpen }) => {
+const HeaderBar = ({ onMobileMenuToggle, drawerOpen, sticky = true }) => {
   const {
     userState,
     statusState,
@@ -63,9 +63,12 @@ const HeaderBar = ({ onMobileMenuToggle, drawerOpen }) => {
   } = useNotifications(statusState);
 
   const { mainNavLinks } = useNavigation(t, docsLink, headerNavModules);
+  const stickyClass = sticky ? 'sticky top-0' : 'relative';
 
   return (
-    <header className='text-semi-color-text-0 sticky top-0 z-50 transition-colors duration-300 bg-white/75 dark:bg-zinc-900/75 backdrop-blur-lg'>
+    <header
+      className={`text-semi-color-text-0 ${stickyClass} z-50 transition-colors duration-300 bg-white/75 dark:bg-zinc-900/75 backdrop-blur-lg`}
+    >
       <NoticeModal
         visible={noticeVisible}
         onClose={handleNoticeClose}

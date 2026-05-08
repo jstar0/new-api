@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
@@ -257,6 +258,24 @@ func UpdateOption(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
 				"success": false,
 				"message": err.Error(),
+			})
+			return
+		}
+	case "UserRelayConcurrencyLimitUser":
+		err = setting.CheckUserRelayConcurrencyLimitUser(option.Value.(string))
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+	case "UserRelayConcurrencyLimit":
+		limit, parseErr := strconv.Atoi(option.Value.(string))
+		if parseErr != nil || limit < 0 {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "用户并发限制不能小于 0",
 			})
 			return
 		}

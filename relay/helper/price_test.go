@@ -10,6 +10,7 @@ import (
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
 	"github.com/QuantumNous/new-api/setting/billing_setting"
 	"github.com/QuantumNous/new-api/setting/config"
+	"github.com/QuantumNous/new-api/setting/ratio_setting"
 	"github.com/QuantumNous/new-api/types"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
@@ -59,4 +60,29 @@ func TestModelPriceHelperTieredUsesPreloadedRequestInput(t *testing.T) {
 	require.Equal(t, "stream", info.TieredBillingSnapshot.EstimatedTier)
 	require.Equal(t, billing_setting.BillingModeTieredExpr, info.TieredBillingSnapshot.BillingMode)
 	require.Equal(t, common.QuotaPerUnit, info.TieredBillingSnapshot.QuotaPerUnit)
+}
+
+func TestModelPriceHelperAppliesGroupBillingMultiplierToPreConsume(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	require.NoError(t, ratio_setting.UpdateModelRatioByJSONString(`{"multiplier-preconsume-model":1}`))
+	require.NoError(t, ratio_setting.UpdateGroupRatioByJSONString(`{"kiro-cc":0.4}`))
+	require.NoError(t, ratio_setting.UpdateGroupBillingMultiplierByJSONString(`{"kiro-cc":4.3}`))
+	t.Cleanup(func() {
+		require.NoError(t, ratio_setting.UpdateModelRatioByJSONString(ratio_setting.DefaultModelRatio2JSONString()))
+		require.NoError(t, ratio_setting.UpdateGroupRatioByJSONString(`{"default":1,"vip":1,"svip":1}`))
+		require.NoError(t, ratio_setting.UpdateGroupBillingMultiplierByJSONString(`{}`))
+	})
+
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+
+	info := &relaycommon.RelayInfo{
+		OriginModelName: "multiplier-preconsume-model",
+		UserGroup:       "kiro-cc",
+		UsingGroup:      "kiro-cc",
+	}
+
+	priceData, err := ModelPriceHelper(ctx, info, 1000, &types.TokenCountMeta{})
+	require.NoError(t, err)
+	require.Equal(t, 1720, priceData.QuotaToPreConsume)
 }

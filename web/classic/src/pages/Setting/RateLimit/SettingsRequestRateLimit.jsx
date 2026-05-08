@@ -39,6 +39,8 @@ export default function RequestRateLimit(props) {
     ModelRequestRateLimitSuccessCount: 1000,
     ModelRequestRateLimitDurationMinutes: 1,
     ModelRequestRateLimitGroup: '',
+    UserRelayConcurrencyLimit: 5,
+    UserRelayConcurrencyLimitUser: '{}',
   });
   const refForm = useRef();
   const [inputsRow, setInputsRow] = useState(inputs);
@@ -232,6 +234,71 @@ export default function RequestRateLimit(props) {
             <Row>
               <Button size='default' onClick={onSubmit}>
                 {t('保存模型速率限制')}
+              </Button>
+            </Row>
+          </Form.Section>
+          <Form.Section text={t('用户并发限制')}>
+            <Row>
+              <Col xs={24} sm={12} md={8} lg={8} xl={8}>
+                <Form.InputNumber
+                  label={t('默认每用户最大并发')}
+                  step={1}
+                  min={0}
+                  max={100000000}
+                  suffix={t('个')}
+                  extraText={t('同时进行中的 Relay 请求数，0 表示全局不限制')}
+                  field={'UserRelayConcurrencyLimit'}
+                  onChange={(value) =>
+                    setInputs({
+                      ...inputs,
+                      UserRelayConcurrencyLimit: String(value),
+                    })
+                  }
+                />
+              </Col>
+            </Row>
+            <Row>
+              <Col xs={24} sm={16}>
+                <Form.TextArea
+                  label={t('指定用户并发覆盖')}
+                  placeholder={t('{\n  "113": 2,\n  "82": 10,\n  "99": 0\n}')}
+                  field={'UserRelayConcurrencyLimitUser'}
+                  autosize={{ minRows: 5, maxRows: 15 }}
+                  trigger='blur'
+                  stopValidateWithError
+                  rules={[
+                    {
+                      validator: (rule, value) => verifyJSON(value),
+                      message: t('不是合法的 JSON 字符串'),
+                    },
+                  ]}
+                  extraText={
+                    <div>
+                      <p>{t('说明：')}</p>
+                      <ul>
+                        <li>
+                          {t(
+                            '使用 JSON 对象格式，key 为用户 ID，value 为最大并发数。',
+                          )}
+                        </li>
+                        <li>{t('示例：{"113": 2, "82": 10, "99": 0}。')}</li>
+                        <li>{t('用户覆盖优先级高于默认每用户最大并发。')}</li>
+                        <li>{t('并发数为 0 表示该用户不限制。')}</li>
+                      </ul>
+                    </div>
+                  }
+                  onChange={(value) => {
+                    setInputs({
+                      ...inputs,
+                      UserRelayConcurrencyLimitUser: value,
+                    });
+                  }}
+                />
+              </Col>
+            </Row>
+            <Row>
+              <Button size='default' onClick={onSubmit}>
+                {t('保存用户并发限制')}
               </Button>
             </Row>
           </Form.Section>

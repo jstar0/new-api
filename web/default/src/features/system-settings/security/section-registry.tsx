@@ -19,6 +19,8 @@ const SECURITY_SECTIONS = [
           ModelRequestRateLimitDurationMinutes:
             settings.ModelRequestRateLimitDurationMinutes,
           ModelRequestRateLimitGroup: settings.ModelRequestRateLimitGroup,
+          UserRelayConcurrencyLimit: settings.UserRelayConcurrencyLimit,
+          UserRelayConcurrencyLimitUser: settings.UserRelayConcurrencyLimitUser,
         }}
       />
     ),

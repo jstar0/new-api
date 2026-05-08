@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"net/http"
 	"strings"
 
@@ -228,6 +229,80 @@ func GetHomePageContent(c *gin.Context) {
 	return
 }
 
+const turboEmailLogoURL = "https://img.cdn1.vip/i/69faa403ca4b8_1778033667.webp"
+
+func buildTurboEmail(title string, preheader string, bodyHTML string) string {
+	brandName := html.EscapeString(common.SystemName)
+	if brandName == "" {
+		brandName = "Turbo API"
+	}
+	return fmt.Sprintf(`<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>%s</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f7fb;color:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',Arial,sans-serif;">
+  <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">%s</span>
+  <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="background:#f5f7fb;padding:32px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+          <tr>
+            <td style="padding:30px 34px 18px;text-align:center;background:#ffffff;">
+              <img src="%s" width="72" height="72" alt="%s" style="display:block;margin:0 auto 14px;border-radius:18px;object-fit:cover;">
+              <div style="font-size:22px;line-height:1.35;font-weight:700;color:#111827;">%s</div>
+              <div style="margin-top:6px;font-size:13px;line-height:1.6;color:#6b7280;">安全验证通知</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:4px 34px 30px;">
+              %s
+              <div style="margin-top:26px;padding-top:18px;border-top:1px solid #eef0f4;font-size:12px;line-height:1.8;color:#6b7280;">
+                如果不是你本人操作，请忽略这封邮件。为保护账号安全，请不要把验证码或链接转发给任何人。
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`, html.EscapeString(title), html.EscapeString(preheader), turboEmailLogoURL, brandName, brandName, bodyHTML)
+}
+
+func buildVerificationEmail(code string) string {
+	code = html.EscapeString(code)
+	brandName := html.EscapeString(common.SystemName)
+	return buildTurboEmail(
+		fmt.Sprintf("%s 邮箱验证码", common.SystemName),
+		fmt.Sprintf("你的 %s 邮箱验证码是 %s", common.SystemName, code),
+		fmt.Sprintf(`<p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#374151;">你好，你正在注册或验证 %s 账号。请在页面中输入下面的验证码：</p>
+<div style="margin:20px 0;padding:18px 20px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;text-align:center;">
+  <div style="font-size:12px;line-height:1.5;color:#6b7280;letter-spacing:.08em;text-transform:uppercase;">Verification Code</div>
+  <div style="margin-top:6px;font-size:34px;line-height:1.2;font-weight:800;letter-spacing:8px;color:#111827;">%s</div>
+</div>
+<p style="margin:0;font-size:14px;line-height:1.8;color:#4b5563;">验证码 %d 分钟内有效，过期后请重新获取。</p>`, brandName, code, common.VerificationValidMinutes),
+	)
+}
+
+func buildPasswordResetEmail(link string) string {
+	safeLink := html.EscapeString(link)
+	brandName := html.EscapeString(common.SystemName)
+	return buildTurboEmail(
+		fmt.Sprintf("%s 密码重置", common.SystemName),
+		fmt.Sprintf("你正在重置 %s 账号密码", common.SystemName),
+		fmt.Sprintf(`<p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#374151;">你好，你正在进行 %s 密码重置。点击下方按钮继续：</p>
+<div style="margin:22px 0;text-align:center;">
+  <a href="%s" style="display:inline-block;padding:12px 22px;background:#111827;color:#ffffff;text-decoration:none;border-radius:10px;font-size:15px;font-weight:700;">重置密码</a>
+</div>
+<p style="margin:0 0 8px;font-size:13px;line-height:1.8;color:#6b7280;">如果按钮无法打开，请复制下面的链接到浏览器：</p>
+<p style="margin:0;word-break:break-all;font-size:12px;line-height:1.7;color:#4b5563;">%s</p>
+<p style="margin:14px 0 0;font-size:14px;line-height:1.8;color:#4b5563;">重置链接 %d 分钟内有效。</p>`, brandName, safeLink, safeLink, common.VerificationValidMinutes),
+	)
+}
+
 func SendEmailVerification(c *gin.Context) {
 	email := c.Query("email")
 	if err := common.Validate.Var(email, "required,email"); err != nil {
@@ -283,10 +358,8 @@ func SendEmailVerification(c *gin.Context) {
 	}
 	code := common.GenerateVerificationCode(6)
 	common.RegisterVerificationCodeWithKey(email, code, common.EmailVerificationPurpose)
-	subject := fmt.Sprintf("%s邮箱验证邮件", common.SystemName)
-	content := fmt.Sprintf("<p>您好，你正在进行%s邮箱验证。</p>"+
-		"<p>您的验证码为: <strong>%s</strong></p>"+
-		"<p>验证码 %d 分钟内有效，如果不是本人操作，请忽略。</p>", common.SystemName, code, common.VerificationValidMinutes)
+	subject := fmt.Sprintf("%s 邮箱验证码", common.SystemName)
+	content := buildVerificationEmail(code)
 	err := common.SendEmail(subject, email, content)
 	if err != nil {
 		common.ApiError(c, err)
@@ -312,11 +385,8 @@ func SendPasswordResetEmail(c *gin.Context) {
 		code := common.GenerateVerificationCode(0)
 		common.RegisterVerificationCodeWithKey(email, code, common.PasswordResetPurpose)
 		link := fmt.Sprintf("%s/user/reset?email=%s&token=%s", system_setting.ServerAddress, email, code)
-		subject := fmt.Sprintf("%s密码重置", common.SystemName)
-		content := fmt.Sprintf("<p>您好，你正在进行%s密码重置。</p>"+
-			"<p>点击 <a href='%s'>此处</a> 进行密码重置。</p>"+
-			"<p>如果链接无法点击，请尝试点击下面的链接或将其复制到浏览器中打开：<br> %s </p>"+
-			"<p>重置链接 %d 分钟内有效，如果不是本人操作，请忽略。</p>", common.SystemName, link, link, common.VerificationValidMinutes)
+		subject := fmt.Sprintf("%s 密码重置", common.SystemName)
+		content := buildPasswordResetEmail(link)
 		err := common.SendEmail(subject, email, content)
 		if err != nil {
 			logger.LogError(c.Request.Context(), fmt.Sprintf("failed to send password reset email to %s: %s", email, err.Error()))

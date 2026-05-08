@@ -25,6 +25,10 @@ var defaultGroupGroupRatio = map[string]map[string]float64{
 
 var groupGroupRatioMap = types.NewRWMap[string, map[string]float64]()
 
+var defaultGroupBillingMultiplier = map[string]float64{}
+
+var groupBillingMultiplierMap = types.NewRWMap[string, float64]()
+
 var defaultGroupSpecialUsableGroup = map[string]map[string]string{
 	"vip": {
 		"append_1":   "vip_special_group_1",
@@ -35,6 +39,7 @@ var defaultGroupSpecialUsableGroup = map[string]map[string]string{
 type GroupRatioSetting struct {
 	GroupRatio              *types.RWMap[string, float64]            `json:"group_ratio"`
 	GroupGroupRatio         *types.RWMap[string, map[string]float64] `json:"group_group_ratio"`
+	GroupBillingMultiplier  *types.RWMap[string, float64]            `json:"group_billing_multiplier"`
 	GroupSpecialUsableGroup *types.RWMap[string, map[string]string]  `json:"group_special_usable_group"`
 }
 
@@ -46,17 +51,22 @@ func init() {
 
 	groupRatioMap.AddAll(defaultGroupRatio)
 	groupGroupRatioMap.AddAll(defaultGroupGroupRatio)
+	groupBillingMultiplierMap.AddAll(defaultGroupBillingMultiplier)
 
 	groupRatioSetting = GroupRatioSetting{
 		GroupSpecialUsableGroup: groupSpecialUsableGroup,
 		GroupRatio:              groupRatioMap,
 		GroupGroupRatio:         groupGroupRatioMap,
+		GroupBillingMultiplier:  groupBillingMultiplierMap,
 	}
 
 	config.GlobalConfig.Register("group_ratio_setting", &groupRatioSetting)
 }
 
 func GetGroupRatioSetting() *GroupRatioSetting {
+	if groupRatioSetting.GroupBillingMultiplier == nil {
+		groupRatioSetting.GroupBillingMultiplier = groupBillingMultiplierMap
+	}
 	if groupRatioSetting.GroupSpecialUsableGroup == nil {
 		groupRatioSetting.GroupSpecialUsableGroup = types.NewRWMap[string, map[string]string]()
 		groupRatioSetting.GroupSpecialUsableGroup.AddAll(defaultGroupSpecialUsableGroup)
@@ -108,6 +118,18 @@ func GroupGroupRatio2JSONString() string {
 
 func UpdateGroupGroupRatioByJSONString(jsonStr string) error {
 	return types.LoadFromJsonString(groupGroupRatioMap, jsonStr)
+}
+
+func UpdateGroupBillingMultiplierByJSONString(jsonStr string) error {
+	return types.LoadFromJsonString(groupBillingMultiplierMap, jsonStr)
+}
+
+func GetGroupBillingMultiplier(group string) float64 {
+	ratio, ok := groupBillingMultiplierMap.Get(group)
+	if !ok || ratio <= 0 {
+		return 1
+	}
+	return ratio
 }
 
 func CheckGroupRatio(jsonStr string) error {

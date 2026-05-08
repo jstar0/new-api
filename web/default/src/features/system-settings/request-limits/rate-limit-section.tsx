@@ -40,6 +40,25 @@ const isValidJSON = (value: string | undefined) => {
   }
 }
 
+const isValidUserConcurrencyJSON = (value: string | undefined) => {
+  if (!value || value.trim() === '') return true
+  try {
+    const parsed = JSON.parse(value)
+    if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return false
+    }
+    for (const [key, val] of Object.entries(parsed)) {
+      if (!/^[1-9]\d*$/.test(key)) return false
+      if (typeof val !== 'number') return false
+      if (!Number.isInteger(val)) return false
+      if (val < 0 || val > 2147483647) return false
+    }
+    return true
+  } catch {
+    return false
+  }
+}
+
 const createRateLimitSchema = (t: (key: string) => string) =>
   z.object({
     ModelRequestRateLimitEnabled: z.boolean(),
@@ -50,6 +69,13 @@ const createRateLimitSchema = (t: (key: string) => string) =>
       .string()
       .optional()
       .refine(isValidJSON, {
+        message: t('Invalid JSON format or values out of allowed range'),
+      }),
+    UserRelayConcurrencyLimit: z.number().min(0).max(100000000),
+    UserRelayConcurrencyLimitUser: z
+      .string()
+      .optional()
+      .refine(isValidUserConcurrencyJSON, {
         message: t('Invalid JSON format or values out of allowed range'),
       }),
   })
@@ -288,6 +314,84 @@ export function RateLimitSection({ defaultValues }: RateLimitSectionProps) {
               </FormItem>
             )}
           />
+
+          <div className='space-y-4 rounded-lg border p-4'>
+            <div>
+              <h3 className='text-base font-medium'>
+                {t('User concurrency limits')}
+              </h3>
+              <p className='text-muted-foreground text-sm'>
+                {t('Control concurrent in-flight relay requests per user.')}
+              </p>
+            </div>
+
+            <FormField
+              control={form.control}
+              name='UserRelayConcurrencyLimit'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Default max concurrency per user')}</FormLabel>
+                  <FormControl>
+                    <div className='flex items-center gap-2'>
+                      <Input
+                        type='number'
+                        min={0}
+                        max={100000000}
+                        step={1}
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value) || 0)
+                        }
+                      />
+                      <span className='text-muted-foreground text-sm'>
+                        {t('requests')}
+                      </span>
+                    </div>
+                  </FormControl>
+                  <FormDescription>
+                    {t('Concurrent in-flight relay requests, 0 = unlimited')}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='UserRelayConcurrencyLimitUser'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Per-user concurrency overrides')}</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      rows={6}
+                      placeholder={`{\n  "113": 2,\n  "82": 10,\n  "99": 0\n}`}
+                      className='font-mono text-sm'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    <div className='space-y-1 text-xs'>
+                      <p className='font-semibold'>{t('Format:')}</p>
+                      <ul className='list-inside list-disc space-y-0.5 pl-2'>
+                        <li>
+                          {t('JSON object:')} {`{"userId": maxConcurrency}`}
+                        </li>
+                        <li>
+                          {t('Example:')} {`{"113": 2, "82": 10, "99": 0}`}
+                        </li>
+                        <li>
+                          {t('User overrides take precedence over the default')}
+                        </li>
+                        <li>{t('0 = unlimited for that user')}</li>
+                      </ul>
+                    </div>
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <Button type='submit' disabled={updateOption.isPending}>
             {updateOption.isPending ? t('Saving...') : t('Save rate limits')}

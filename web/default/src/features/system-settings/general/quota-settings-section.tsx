@@ -231,10 +231,7 @@ export function QuotaSettingsSection({
               <FormItem>
                 <FormLabel>{t('Documentation Link')}</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder={t('https://docs.example.com')}
-                    {...field}
-                  />
+                  <Input placeholder='/docs' {...field} />
                 </FormControl>
                 <FormDescription>
                   {t('Link to your documentation site')}

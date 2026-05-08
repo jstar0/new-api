@@ -49,6 +49,7 @@ const PageLayout = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { i18n } = useTranslation();
   const location = useLocation();
+  const isDocsRoute = location.pathname === '/docs';
 
   const cardProPages = [
     '/console/channel',
@@ -60,6 +61,7 @@ const PageLayout = () => {
     '/console/task',
     '/console/models',
     '/pricing',
+    '/docs',
   ];
 
   const shouldHideFooter = cardProPages.includes(location.pathname);
@@ -150,7 +152,7 @@ const PageLayout = () => {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        overflow: isMobile ? 'visible' : 'hidden',
+        overflow: isDocsRoute || isMobile ? 'visible' : 'hidden',
       }}
     >
       <Header
@@ -158,7 +160,7 @@ const PageLayout = () => {
           padding: 0,
           height: 'auto',
           lineHeight: 'normal',
-          position: 'fixed',
+          position: isDocsRoute ? 'relative' : 'fixed',
           width: '100%',
           top: 0,
           zIndex: 100,
@@ -167,11 +169,12 @@ const PageLayout = () => {
         <HeaderBar
           onMobileMenuToggle={() => setDrawerOpen((prev) => !prev)}
           drawerOpen={drawerOpen}
+          sticky={!isDocsRoute}
         />
       </Header>
       <Layout
         style={{
-          overflow: isMobile ? 'visible' : 'auto',
+          overflow: isDocsRoute || isMobile ? 'visible' : 'auto',
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -211,7 +214,7 @@ const PageLayout = () => {
           <Content
             style={{
               flex: '1 0 auto',
-              overflowY: isMobile ? 'visible' : 'hidden',
+              overflowY: isDocsRoute || isMobile ? 'visible' : 'hidden',
               WebkitOverflowScrolling: 'touch',
               padding: shouldInnerPadding ? (isMobile ? '5px' : '24px') : '0',
               position: 'relative',
