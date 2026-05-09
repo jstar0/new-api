@@ -371,6 +371,28 @@ func GetAffCode(c *gin.Context) {
 	return
 }
 
+func GetAffLeaderboard(c *gin.Context) {
+	limit := 10
+	if rawLimit := c.Query("limit"); rawLimit != "" {
+		parsedLimit, err := strconv.Atoi(rawLimit)
+		if err != nil {
+			common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+			return
+		}
+		limit = parsedLimit
+	}
+	if limit <= 0 || limit > 50 {
+		limit = 10
+	}
+
+	leaderboard, err := model.GetAffLeaderboard(limit)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	common.ApiSuccess(c, leaderboard)
+}
+
 func GetSelf(c *gin.Context) {
 	id := c.GetInt("id")
 	userRole := c.GetInt("role")

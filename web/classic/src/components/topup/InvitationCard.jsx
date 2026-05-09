@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Avatar,
   Typography,
@@ -26,8 +26,19 @@ import {
   Input,
   Badge,
   Space,
+  Table,
+  Tag,
 } from '@douyinfe/semi-ui';
-import { Copy, Users, BarChart2, TrendingUp, Gift, Zap } from 'lucide-react';
+import {
+  Copy,
+  Users,
+  BarChart2,
+  TrendingUp,
+  Gift,
+  Zap,
+  Trophy,
+} from 'lucide-react';
+import { API } from '../../helpers';
 
 const { Text } = Typography;
 
@@ -39,6 +50,77 @@ const InvitationCard = ({
   affLink,
   handleAffLinkClick,
 }) => {
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadLeaderboard = async () => {
+      setLeaderboardLoading(true);
+      try {
+        const res = await API.get('/api/user/aff/leaderboard?limit=10', {
+          skipErrorHandler: true,
+        });
+        if (mounted && res?.data?.success) {
+          setLeaderboard(res.data.data || []);
+        }
+      } catch (error) {
+        if (mounted) {
+          setLeaderboard([]);
+        }
+      } finally {
+        if (mounted) {
+          setLeaderboardLoading(false);
+        }
+      }
+    };
+
+    loadLeaderboard();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const leaderboardColumns = [
+    {
+      title: t('排名'),
+      dataIndex: 'rank',
+      width: 72,
+      render: (rank) => (
+        <Tag color={rank <= 3 ? 'yellow' : 'grey'} size='small'>
+          #{rank}
+        </Tag>
+      ),
+    },
+    {
+      title: t('用户'),
+      dataIndex: 'display_name',
+      render: (text) => (
+        <Text ellipsis={{ showTooltip: true }} className='text-sm'>
+          {text}
+        </Text>
+      ),
+    },
+    {
+      title: t('有效邀请'),
+      dataIndex: 'effective_invite_count',
+      width: 92,
+      render: (count) => count || 0,
+    },
+    {
+      title: t('邀请充值'),
+      dataIndex: 'recharge_quota',
+      width: 120,
+      render: (quota) => renderQuota(quota || 0),
+    },
+    {
+      title: t('累计收益'),
+      dataIndex: 'rebate_quota',
+      width: 120,
+      render: (quota) => renderQuota(quota || 0),
+    },
+  ];
+
   return (
     <Card className='!rounded-2xl shadow-sm border-0'>
       {/* 卡片头部 */}
@@ -190,6 +272,28 @@ const InvitationCard = ({
                 {t('复制')}
               </Button>
             }
+          />
+        </Card>
+
+        {/* 邀请排行榜 */}
+        <Card
+          className='!rounded-xl w-full'
+          title={
+            <div className='flex items-center gap-2'>
+              <Trophy size={16} />
+              <Text type='tertiary'>{t('邀请排行榜')}</Text>
+            </div>
+          }
+        >
+          <Table
+            size='small'
+            columns={leaderboardColumns}
+            dataSource={leaderboard}
+            rowKey='rank'
+            loading={leaderboardLoading}
+            pagination={false}
+            empty={t('暂无排行数据')}
+            scroll={{ x: 520 }}
           />
         </Card>
 
