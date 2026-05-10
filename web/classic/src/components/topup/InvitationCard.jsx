@@ -43,6 +43,8 @@ import { API } from '../../helpers';
 
 const { Text } = Typography;
 
+const TOP_UP_LEADERBOARD_REFRESH_INTERVAL = 30 * 1000;
+
 const InvitationCard = ({
   t,
   userState,
@@ -78,8 +80,10 @@ const InvitationCard = ({
       }
     };
 
-    const loadTopUpLeaderboard = async () => {
-      setTopUpLeaderboardLoading(true);
+    const loadTopUpLeaderboard = async (showLoading = true) => {
+      if (showLoading) {
+        setTopUpLeaderboardLoading(true);
+      }
       try {
         const res = await API.get('/api/user/topup/leaderboard?limit=10', {
           skipErrorHandler: true,
@@ -92,7 +96,7 @@ const InvitationCard = ({
           setTopUpLeaderboard([]);
         }
       } finally {
-        if (mounted) {
+        if (mounted && showLoading) {
           setTopUpLeaderboardLoading(false);
         }
       }
@@ -100,8 +104,12 @@ const InvitationCard = ({
 
     loadLeaderboard();
     loadTopUpLeaderboard();
+    const topUpLeaderboardTimer = window.setInterval(() => {
+      loadTopUpLeaderboard(false);
+    }, TOP_UP_LEADERBOARD_REFRESH_INTERVAL);
     return () => {
       mounted = false;
+      window.clearInterval(topUpLeaderboardTimer);
     };
   }, []);
 
