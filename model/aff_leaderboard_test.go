@@ -27,8 +27,8 @@ func insertAffLeaderboardUser(t *testing.T, user *User) {
 func TestGetAffLeaderboardRanksByInviteeRechargeAndRedemption(t *testing.T) {
 	truncateTables(t)
 
-	insertAffLeaderboardUser(t, &User{Id: 1, Username: "alice", DisplayName: "Alice Creator", AffHistoryQuota: 700000})
-	insertAffLeaderboardUser(t, &User{Id: 2, Username: "bob@example.com", AffHistoryQuota: 300000})
+	insertAffLeaderboardUser(t, &User{Id: 1, Username: "alice", DisplayName: "Alice Creator", AffHistoryQuota: 99000000})
+	insertAffLeaderboardUser(t, &User{Id: 2, Username: "bob@example.com", AffHistoryQuota: 1})
 	insertAffLeaderboardUser(t, &User{Id: 10, Username: "alice_invitee_paid", InviterId: 1})
 	insertAffLeaderboardUser(t, &User{Id: 11, Username: "alice_invitee_free", InviterId: 1})
 	insertAffLeaderboardUser(t, &User{Id: 12, Username: "bob_invitee", InviterId: 2})
@@ -73,11 +73,52 @@ func TestGetAffLeaderboardRanksByInviteeRechargeAndRedemption(t *testing.T) {
 	assert.EqualValues(t, 1, leaderboard[0].InviteCount)
 	assert.EqualValues(t, 1, leaderboard[0].EffectiveInviteCount)
 	assert.EqualValues(t, 10000000, leaderboard[0].RechargeQuota)
-	assert.EqualValues(t, 300000, leaderboard[0].RebateQuota)
+	assert.EqualValues(t, 500000, leaderboard[0].RebateQuota)
 
 	assert.Equal(t, 2, leaderboard[1].Rank)
 	assert.EqualValues(t, 2, leaderboard[1].InviteCount)
 	assert.EqualValues(t, 1, leaderboard[1].EffectiveInviteCount)
 	assert.EqualValues(t, 6000000, leaderboard[1].RechargeQuota)
-	assert.EqualValues(t, 700000, leaderboard[1].RebateQuota)
+	assert.EqualValues(t, 300000, leaderboard[1].RebateQuota)
+}
+
+func TestRedeemGrantsInviteRechargeRebate(t *testing.T) {
+	truncateTables(t)
+
+	insertAffLeaderboardUser(t, &User{Id: 1, Username: "inviter"})
+	insertAffLeaderboardUser(t, &User{Id: 10, Username: "invitee", InviterId: 1})
+	require.NoError(t, DB.Create(&Redemption{
+		Key:    "redeem-invite-rebate",
+		Status: common.RedemptionCodeStatusEnabled,
+		Quota:  10000000,
+	}).Error)
+
+	quota, err := Redeem("redeem-invite-rebate", 10)
+	require.NoError(t, err)
+	assert.EqualValues(t, 10000000, quota)
+
+	var invitee User
+	require.NoError(t, DB.First(&invitee, 10).Error)
+	assert.EqualValues(t, 10000000, invitee.Quota)
+
+	var inviter User
+	require.NoError(t, DB.First(&inviter, 1).Error)
+	assert.EqualValues(t, 500000, inviter.AffQuota)
+	assert.EqualValues(t, 500000, inviter.AffHistoryQuota)
+}
+
+func TestGrantInviteRechargeRebateSkipsUsersWithoutInviter(t *testing.T) {
+	truncateTables(t)
+
+	insertAffLeaderboardUser(t, &User{Id: 10, Username: "plain-user"})
+
+	inviterId, rebateQuota, err := GrantInviteRechargeRebate(10, 10000000)
+	require.NoError(t, err)
+	assert.Zero(t, inviterId)
+	assert.Zero(t, rebateQuota)
+
+	var user User
+	require.NoError(t, DB.First(&user, 10).Error)
+	assert.Zero(t, user.AffQuota)
+	assert.Zero(t, user.AffHistoryQuota)
 }

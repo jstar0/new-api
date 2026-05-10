@@ -64,12 +64,12 @@ SELECT
 	COUNT(invitee.id) AS invite_count,
 	COALESCE(SUM(CASE WHEN COALESCE(invitee_recharge.recharge_quota, 0) > 0 THEN 1 ELSE 0 END), 0) AS effective_invite_count,
 	COALESCE(SUM(invitee_recharge.recharge_quota), 0) AS recharge_quota,
-	COALESCE(inviter.aff_history, 0) AS rebate_quota
+	CAST(COALESCE(SUM(invitee_recharge.recharge_quota), 0) / ? AS BIGINT) AS rebate_quota
 FROM users inviter
 JOIN users invitee ON invitee.inviter_id = inviter.id AND invitee.deleted_at IS NULL
 LEFT JOIN invitee_recharge ON invitee_recharge.invitee_id = invitee.id
 WHERE inviter.deleted_at IS NULL
-GROUP BY inviter.id, inviter.display_name, inviter.username, inviter.aff_history
+GROUP BY inviter.id, inviter.display_name, inviter.username
 HAVING COUNT(invitee.id) > 0
 ORDER BY recharge_quota DESC, effective_invite_count DESC, invite_count DESC, inviter.id ASC
 LIMIT ?`,
@@ -78,6 +78,7 @@ LIMIT ?`,
 		common.QuotaPerUnit,
 		common.QuotaPerUnit,
 		common.RedemptionCodeStatusUsed,
+		inviteRechargeRebateDivisor,
 		limit,
 	).Scan(&rows).Error
 	if err != nil {

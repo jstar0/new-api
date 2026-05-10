@@ -120,6 +120,8 @@ func Redeem(key string, userId int) (quota int, err error) {
 		return 0, errors.New("无效的 user id")
 	}
 	redemption := &Redemption{}
+	var rebateInviterId int
+	var rebateQuota int
 
 	keyCol := "`key`"
 	if common.UsingPostgreSQL {
@@ -145,6 +147,10 @@ func Redeem(key string, userId int) (quota int, err error) {
 		redemption.Status = common.RedemptionCodeStatusUsed
 		redemption.UsedUserId = userId
 		err = tx.Save(redemption).Error
+		if err != nil {
+			return err
+		}
+		rebateInviterId, rebateQuota, err = GrantInviteRechargeRebateTx(tx, userId, int64(redemption.Quota))
 		return err
 	})
 	if err != nil {
@@ -152,6 +158,7 @@ func Redeem(key string, userId int) (quota int, err error) {
 		return 0, ErrRedeemFailed
 	}
 	RecordLog(userId, LogTypeTopup, fmt.Sprintf("通过兑换码充值 %s，兑换码ID %d", logger.LogQuota(redemption.Quota), redemption.Id))
+	RecordInviteRechargeRebateLog(rebateInviterId, rebateQuota, "好友兑换码充值")
 	return redemption.Quota, nil
 }
 
