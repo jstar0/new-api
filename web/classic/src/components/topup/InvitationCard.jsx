@@ -33,6 +33,7 @@ import {
   Copy,
   Users,
   BarChart2,
+  CreditCard,
   TrendingUp,
   Gift,
   Zap,
@@ -52,6 +53,8 @@ const InvitationCard = ({
 }) => {
   const [leaderboard, setLeaderboard] = useState([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [topUpLeaderboard, setTopUpLeaderboard] = useState([]);
+  const [topUpLeaderboardLoading, setTopUpLeaderboardLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -75,7 +78,28 @@ const InvitationCard = ({
       }
     };
 
+    const loadTopUpLeaderboard = async () => {
+      setTopUpLeaderboardLoading(true);
+      try {
+        const res = await API.get('/api/user/topup/leaderboard?limit=10', {
+          skipErrorHandler: true,
+        });
+        if (mounted && res?.data?.success) {
+          setTopUpLeaderboard(res.data.data || []);
+        }
+      } catch (error) {
+        if (mounted) {
+          setTopUpLeaderboard([]);
+        }
+      } finally {
+        if (mounted) {
+          setTopUpLeaderboardLoading(false);
+        }
+      }
+    };
+
     loadLeaderboard();
+    loadTopUpLeaderboard();
     return () => {
       mounted = false;
     };
@@ -116,6 +140,40 @@ const InvitationCard = ({
     {
       title: t('累计收益'),
       dataIndex: 'rebate_quota',
+      width: 120,
+      render: (quota) => renderQuota(quota || 0),
+    },
+  ];
+
+  const topUpLeaderboardColumns = [
+    {
+      title: t('排名'),
+      dataIndex: 'rank',
+      width: 72,
+      render: (rank) => (
+        <Tag color={rank <= 3 ? 'yellow' : 'grey'} size='small'>
+          #{rank}
+        </Tag>
+      ),
+    },
+    {
+      title: t('用户'),
+      dataIndex: 'display_name',
+      render: (text) => (
+        <Text ellipsis={{ showTooltip: true }} className='text-sm'>
+          {text}
+        </Text>
+      ),
+    },
+    {
+      title: t('充值次数'),
+      dataIndex: 'recharge_count',
+      width: 92,
+      render: (count) => count || 0,
+    },
+    {
+      title: t('累计充值'),
+      dataIndex: 'recharge_quota',
       width: 120,
       render: (quota) => renderQuota(quota || 0),
     },
@@ -272,6 +330,28 @@ const InvitationCard = ({
                 {t('复制')}
               </Button>
             }
+          />
+        </Card>
+
+        {/* 充值排行榜 */}
+        <Card
+          className='!rounded-xl w-full'
+          title={
+            <div className='flex items-center gap-2'>
+              <CreditCard size={16} />
+              <Text type='tertiary'>{t('充值排行榜')}</Text>
+            </div>
+          }
+        >
+          <Table
+            size='small'
+            columns={topUpLeaderboardColumns}
+            dataSource={topUpLeaderboard}
+            rowKey='rank'
+            loading={topUpLeaderboardLoading}
+            pagination={false}
+            empty={t('暂无排行数据')}
+            scroll={{ x: 420 }}
           />
         </Card>
 
