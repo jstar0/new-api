@@ -21,9 +21,12 @@ import { DataTableColumnHeader } from '@/components/data-table'
 import { StatusBadge, type StatusBadgeProps } from '@/components/status-badge'
 import type { UsageLog } from '../../data/schema'
 import {
+  formatTokensPerSecond,
   formatModelName,
   getFirstResponseTimeColor,
+  getOutputTokensPerSecond,
   getResponseTimeColor,
+  getThroughputColor,
   getTieredBillingSummary,
   hasAnyCacheTokens,
   parseLogOther,
@@ -507,10 +510,6 @@ export function useCommonLogsColumns(isAdmin: boolean): ColumnDef<UsageLog>[] {
         const useTime = row.getValue('use_time') as number
         const other = parseLogOther(log.other)
         const frt = other?.frt
-        const tokensPerSecond =
-          useTime > 0 && log.completion_tokens > 0
-            ? log.completion_tokens / useTime
-            : null
         const timeVariant = getResponseTimeColor(useTime, log.completion_tokens)
         const frtVariant = frt ? getFirstResponseTimeColor(frt / 1000) : null
 
@@ -572,15 +571,6 @@ export function useCommonLogsColumns(isAdmin: boolean): ColumnDef<UsageLog>[] {
             <div className='flex items-center gap-1 text-[11px]'>
               <span className='text-muted-foreground/60'>
                 {log.is_stream ? t('Stream') : t('Non-stream')}
-                {tokensPerSecond != null && (
-                  <>
-                    {' · '}
-                    <span className='font-mono tabular-nums'>
-                      {Math.round(tokensPerSecond)}
-                    </span>
-                    {' t/s'}
-                  </>
-                )}
               </span>
               {log.is_stream &&
                 other?.stream_status &&
@@ -612,6 +602,47 @@ export function useCommonLogsColumns(isAdmin: boolean): ColumnDef<UsageLog>[] {
         )
       },
       meta: { label: t('Timing'), mobileHidden: true },
+    },
+
+    {
+      id: 'tokens_per_second',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('Token/s')} />
+      ),
+      cell: ({ row }) => {
+        const log = row.original
+        if (!isTimingLogType(log.type)) return null
+
+        const tokensPerSecond = getOutputTokensPerSecond(
+          log.completion_tokens,
+          log.use_time
+        )
+
+        if (tokensPerSecond == null) {
+          return <span className='text-muted-foreground text-xs'>-</span>
+        }
+
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <StatusBadge
+                    variant={getThroughputColor(tokensPerSecond)}
+                    size='sm'
+                    copyable={false}
+                    className='font-mono tabular-nums'
+                  />
+                }
+              >
+                {formatTokensPerSecond(tokensPerSecond)} t/s
+              </TooltipTrigger>
+              <TooltipContent>{t('Output tokens per second')}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )
+      },
+      meta: { label: t('Token/s'), mobileHidden: true },
     },
 
     {

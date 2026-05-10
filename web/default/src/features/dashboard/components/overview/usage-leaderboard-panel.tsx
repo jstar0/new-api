@@ -17,6 +17,8 @@ import { getUsageLeaderboard } from '@/features/dashboard/api'
 import type { UsageLeaderboardPeriod } from '@/features/dashboard/types'
 import { PanelWrapper } from '../ui/panel-wrapper'
 
+const USAGE_LEADERBOARD_REFRESH_INTERVAL = 15 * 60 * 1000
+
 const USAGE_LEADERBOARD_PERIODS: Array<{
   value: UsageLeaderboardPeriod
   label: string
@@ -39,8 +41,8 @@ export function UsageLeaderboardPanel() {
   const usageLeaderboardQuery = useQuery({
     queryKey: ['dashboard', 'overview', 'usage-leaderboard', period],
     queryFn: () => getUsageLeaderboard(10, period),
-    refetchInterval: 30 * 1000,
-    staleTime: 30 * 1000,
+    refetchInterval: USAGE_LEADERBOARD_REFRESH_INTERVAL,
+    staleTime: USAGE_LEADERBOARD_REFRESH_INTERVAL,
   })
 
   const items = usageLeaderboardQuery.data?.data ?? []
@@ -54,7 +56,7 @@ export function UsageLeaderboardPanel() {
         </span>
       }
       description={t(
-        'Top users by token consumption, refreshed every 30 seconds'
+        'Top users by token consumption, refreshed every 15 minutes'
       )}
       loading={usageLeaderboardQuery.isLoading}
       empty={!usageLeaderboardQuery.isLoading && items.length === 0}

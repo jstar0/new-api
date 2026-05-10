@@ -120,6 +120,25 @@ export function getThroughputColor(
   return 'danger'
 }
 
+export function getOutputTokensPerSecond(
+  completionTokens: number,
+  seconds: number
+): number | null {
+  if (seconds <= 0 || completionTokens <= 0) return null
+  const value = completionTokens / seconds
+  return Number.isFinite(value) ? value : null
+}
+
+export function formatTokensPerSecond(tokensPerSecond: number): string {
+  if (tokensPerSecond >= 100) {
+    return Math.round(tokensPerSecond).toLocaleString()
+  }
+  if (tokensPerSecond >= 10) {
+    return tokensPerSecond.toFixed(1)
+  }
+  return tokensPerSecond.toFixed(2)
+}
+
 /**
  * Get response color using throughput only when enough output tokens exist.
  */

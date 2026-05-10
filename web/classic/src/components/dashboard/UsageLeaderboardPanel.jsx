@@ -23,7 +23,7 @@ import { Activity } from 'lucide-react';
 import { API, renderQuota } from '../../helpers';
 
 const { Text } = Typography;
-const USAGE_LEADERBOARD_REFRESH_INTERVAL = 30 * 1000;
+const USAGE_LEADERBOARD_REFRESH_INTERVAL = 15 * 60 * 1000;
 
 const formatInteger = (value) => Number(value || 0).toLocaleString();
 
@@ -124,7 +124,7 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
             <Activity size={16} />
             <span>{t('Token 消耗排行榜')}</span>
             <Tag color='white' shape='circle'>
-              {t('每30秒更新')}
+              {t('每15分钟更新')}
             </Tag>
           </div>
         }

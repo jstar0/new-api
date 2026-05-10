@@ -144,10 +144,7 @@ function renderType(type, t) {
 
 function buildStreamStatusTooltip(ss, t) {
   if (!ss) return null;
-  const lines = [
-    t('流状态') + '：' + t('异常'),
-    (ss.end_reason || 'unknown'),
-  ];
+  const lines = [t('流状态') + '：' + t('异常'), ss.end_reason || 'unknown'];
   if (ss.error_count > 0) {
     lines.push(`${t('软错误')}: ${ss.error_count}`);
   }
@@ -185,11 +182,7 @@ function renderIsStream(bool, t, streamStatus) {
                 userSelect: 'none',
               }}
             >
-              <CircleAlert
-                size={14}
-                strokeWidth={2.5}
-                color='currentColor'
-              />
+              <CircleAlert size={14} strokeWidth={2.5} color='currentColor' />
             </span>
           </Tooltip>
         )}
@@ -344,6 +337,36 @@ function formatTokenCount(value) {
   return toTokenNumber(value).toLocaleString();
 }
 
+function getOutputTokensPerSecond(record) {
+  const useTime = Number(record?.use_time || 0);
+  const completionTokens = Number(record?.completion_tokens || 0);
+  if (useTime <= 0 || completionTokens <= 0) {
+    return null;
+  }
+  const value = completionTokens / useTime;
+  return Number.isFinite(value) ? value : null;
+}
+
+function formatTokensPerSecond(tokensPerSecond) {
+  if (tokensPerSecond >= 100) {
+    return Math.round(tokensPerSecond).toLocaleString();
+  }
+  if (tokensPerSecond >= 10) {
+    return tokensPerSecond.toFixed(1);
+  }
+  return tokensPerSecond.toFixed(2);
+}
+
+function getTokenSpeedColor(tokensPerSecond) {
+  if (tokensPerSecond >= 30) {
+    return 'green';
+  }
+  if (tokensPerSecond >= 15) {
+    return 'orange';
+  }
+  return 'red';
+}
+
 function getPromptCacheSummary(other) {
   if (!other || typeof other !== 'object') {
     return null;
@@ -461,7 +484,11 @@ function getUsageLogDetailSummary(record, text, billingDisplayMode, t) {
     };
   }
 
-  const summaryOpts = { ...other, displayMode: billingDisplayMode, outputMode: 'segments' };
+  const summaryOpts = {
+    ...other,
+    displayMode: billingDisplayMode,
+    outputMode: 'segments',
+  };
 
   if (other?.billing_mode === 'tiered_expr') {
     return { segments: renderTieredModelPriceSimple(summaryOpts) };
@@ -723,6 +750,31 @@ export const getLogsColumns = ({
             </>
           );
         }
+      },
+    },
+    {
+      key: COLUMN_KEYS.TOKEN_SPEED,
+      title: t('Token/秒'),
+      dataIndex: 'token_speed',
+      render: (text, record) => {
+        if (!(record.type === 2 || record.type === 5)) {
+          return <></>;
+        }
+        const tokensPerSecond = getOutputTokensPerSecond(record);
+        if (tokensPerSecond === null) {
+          return (
+            <Typography.Text type='tertiary' size='small'>
+              -
+            </Typography.Text>
+          );
+        }
+        return (
+          <Tooltip content={t('输出 Token / 总耗时')}>
+            <Tag color={getTokenSpeedColor(tokensPerSecond)} shape='circle'>
+              {formatTokensPerSecond(tokensPerSecond)} t/s
+            </Tag>
+          </Tooltip>
+        );
       },
     },
     {

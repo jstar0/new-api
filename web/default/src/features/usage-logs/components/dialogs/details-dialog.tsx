@@ -39,7 +39,10 @@ import {
   hasAnyCacheTokens,
   isViolationFeeLog,
   getFirstResponseTimeColor,
+  getOutputTokensPerSecond,
   getResponseTimeColor,
+  getThroughputColor,
+  formatTokensPerSecond,
 } from '../../lib/format'
 import {
   getLogTypeConfig,
@@ -400,6 +403,10 @@ export function DetailsDialog(props: DetailsDialogProps) {
     !!other?.expr_b64
   const hasAudioTokens = other?.ws || other?.audio
   const showTiming = isTimingLogType(props.log.type)
+  const tokensPerSecond = getOutputTokensPerSecond(
+    props.log.completion_tokens,
+    props.log.use_time
+  )
   const showAdminIp =
     !!props.log.ip && (showTiming || (props.isAdmin && isTopup))
   const adminInfo = other?.admin_info
@@ -587,6 +594,28 @@ export function DetailsDialog(props: DetailsDialogProps) {
                             (FRT: {formatUseTime(other.frt / 1000)})
                           </span>
                         )}
+                    </span>
+                  }
+                />
+              )}
+
+              {showTiming && tokensPerSecond != null && (
+                <DetailRow
+                  label={t('Token/s')}
+                  value={
+                    <span
+                      className={cn(
+                        'font-medium',
+                        timingTextColorClass(
+                          getThroughputColor(tokensPerSecond)
+                        )
+                      )}
+                    >
+                      {formatTokensPerSecond(tokensPerSecond)} t/s
+                      <span className='text-muted-foreground font-normal'>
+                        {' '}
+                        ({t('Output tokens per second')})
+                      </span>
                     </span>
                   }
                 />

@@ -43,7 +43,7 @@ import { API } from '../../helpers';
 
 const { Text } = Typography;
 
-const TOP_UP_LEADERBOARD_REFRESH_INTERVAL = 30 * 1000;
+const LEADERBOARD_REFRESH_INTERVAL = 15 * 60 * 1000;
 
 const InvitationCard = ({
   t,
@@ -60,8 +60,10 @@ const InvitationCard = ({
 
   useEffect(() => {
     let mounted = true;
-    const loadLeaderboard = async () => {
-      setLeaderboardLoading(true);
+    const loadLeaderboard = async (showLoading = true) => {
+      if (showLoading) {
+        setLeaderboardLoading(true);
+      }
       try {
         const res = await API.get('/api/user/aff/leaderboard?limit=10', {
           skipErrorHandler: true,
@@ -74,7 +76,7 @@ const InvitationCard = ({
           setLeaderboard([]);
         }
       } finally {
-        if (mounted) {
+        if (mounted && showLoading) {
           setLeaderboardLoading(false);
         }
       }
@@ -104,11 +106,15 @@ const InvitationCard = ({
 
     loadLeaderboard();
     loadTopUpLeaderboard();
+    const leaderboardTimer = window.setInterval(() => {
+      loadLeaderboard(false);
+    }, LEADERBOARD_REFRESH_INTERVAL);
     const topUpLeaderboardTimer = window.setInterval(() => {
       loadTopUpLeaderboard(false);
-    }, TOP_UP_LEADERBOARD_REFRESH_INTERVAL);
+    }, LEADERBOARD_REFRESH_INTERVAL);
     return () => {
       mounted = false;
+      window.clearInterval(leaderboardTimer);
       window.clearInterval(topUpLeaderboardTimer);
     };
   }, []);
@@ -348,6 +354,9 @@ const InvitationCard = ({
             <div className='flex items-center gap-2'>
               <CreditCard size={16} />
               <Text type='tertiary'>{t('充值排行榜')}</Text>
+              <Tag color='white' shape='circle'>
+                {t('每15分钟更新')}
+              </Tag>
             </div>
           }
         >
@@ -370,6 +379,9 @@ const InvitationCard = ({
             <div className='flex items-center gap-2'>
               <Trophy size={16} />
               <Text type='tertiary'>{t('邀请排行榜')}</Text>
+              <Tag color='white' shape='circle'>
+                {t('每15分钟更新')}
+              </Tag>
             </div>
           }
         >
