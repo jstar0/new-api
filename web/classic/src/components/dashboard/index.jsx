@@ -25,6 +25,7 @@ import { StatusContext } from '../../context/Status';
 import DashboardHeader from './DashboardHeader';
 import StatsCards from './StatsCards';
 import ChartsPanel from './ChartsPanel';
+import UsageLeaderboardPanel from './UsageLeaderboardPanel';
 import ApiInfoPanel from './ApiInfoPanel';
 import AnnouncementsPanel from './AnnouncementsPanel';
 import FaqPanel from './FaqPanel';
@@ -181,6 +182,8 @@ const Dashboard = () => {
         CARD_PROPS={CARD_PROPS}
         CHART_CONFIG={CHART_CONFIG}
       />
+
+      <UsageLeaderboardPanel CARD_PROPS={CARD_PROPS} t={dashboardData.t} />
 
       {/* API信息和图表面板 */}
       <div className='mb-4'>
