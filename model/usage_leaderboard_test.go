@@ -3,6 +3,7 @@ package model
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -61,7 +62,7 @@ func TestGetUsageLeaderboardRanksByConsumedTokens(t *testing.T) {
 		CreatedAt:        140,
 	}).Error)
 
-	leaderboard, err := GetUsageLeaderboard(10)
+	leaderboard, err := GetUsageLeaderboard(10, "all")
 	require.NoError(t, err)
 	require.Len(t, leaderboard, 2)
 
@@ -77,4 +78,63 @@ func TestGetUsageLeaderboardRanksByConsumedTokens(t *testing.T) {
 	assert.EqualValues(t, 2000, leaderboard[1].ConsumeTokens)
 	assert.EqualValues(t, 150, leaderboard[1].ConsumeQuota)
 	assert.EqualValues(t, 110, leaderboard[1].LatestConsumeTime)
+}
+
+func TestGetUsageLeaderboardFiltersByPeriod(t *testing.T) {
+	truncateTables(t)
+
+	insertAffLeaderboardUser(t, &User{Id: 1, Username: "daily-winner"})
+	insertAffLeaderboardUser(t, &User{Id: 2, Username: "weekly-winner"})
+	insertAffLeaderboardUser(t, &User{Id: 3, Username: "all-time-winner"})
+
+	now := time.Date(2026, 5, 10, 12, 0, 0, 0, time.Local)
+	startOfDay := time.Date(2026, 5, 10, 0, 0, 0, 0, time.Local).Unix()
+	startOfWeek := time.Date(2026, 5, 4, 0, 0, 0, 0, time.Local).Unix()
+
+	logs := []Log{
+		{
+			UserId:           1,
+			Username:         "daily-winner",
+			Type:             LogTypeConsume,
+			PromptTokens:     800,
+			CompletionTokens: 200,
+			Quota:            100,
+			CreatedAt:        startOfDay + 3600,
+		},
+		{
+			UserId:           2,
+			Username:         "weekly-winner",
+			Type:             LogTypeConsume,
+			PromptTokens:     1200,
+			CompletionTokens: 300,
+			Quota:            150,
+			CreatedAt:        startOfWeek + 3600,
+		},
+		{
+			UserId:           3,
+			Username:         "all-time-winner",
+			Type:             LogTypeConsume,
+			PromptTokens:     3000,
+			CompletionTokens: 1000,
+			Quota:            400,
+			CreatedAt:        startOfWeek - 3600,
+		},
+	}
+	require.NoError(t, LOG_DB.Create(&logs).Error)
+
+	dayLeaderboard, err := getUsageLeaderboard(10, "day", now)
+	require.NoError(t, err)
+	require.Len(t, dayLeaderboard, 1)
+	assert.EqualValues(t, 1000, dayLeaderboard[0].ConsumeTokens)
+
+	weekLeaderboard, err := getUsageLeaderboard(10, "week", now)
+	require.NoError(t, err)
+	require.Len(t, weekLeaderboard, 2)
+	assert.EqualValues(t, 1500, weekLeaderboard[0].ConsumeTokens)
+	assert.EqualValues(t, 1000, weekLeaderboard[1].ConsumeTokens)
+
+	allLeaderboard, err := getUsageLeaderboard(10, "all", now)
+	require.NoError(t, err)
+	require.Len(t, allLeaderboard, 3)
+	assert.EqualValues(t, 4000, allLeaderboard[0].ConsumeTokens)
 }

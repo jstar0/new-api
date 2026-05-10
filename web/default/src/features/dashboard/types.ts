@@ -15,6 +15,17 @@ export interface QuotaDataItem {
   quota?: number
 }
 
+export interface UsageLeaderboardItem {
+  rank: number
+  display_name: string
+  request_count: number
+  consume_tokens: number
+  consume_quota: number
+  latest_consume_time: number
+}
+
+export type UsageLeaderboardPeriod = 'day' | 'week' | 'all'
+
 // ============================================================================
 // Uptime Monitoring Types
 // ============================================================================

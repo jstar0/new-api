@@ -1,5 +1,10 @@
 import { api } from '@/lib/api'
-import type { QuotaDataItem, UptimeGroupResult } from './types'
+import type {
+  QuotaDataItem,
+  UptimeGroupResult,
+  UsageLeaderboardItem,
+  UsageLeaderboardPeriod,
+} from './types'
 
 // ============================================================================
 // Dashboard APIs
@@ -40,6 +45,19 @@ export async function getUserQuotaDataByUsers(params: {
     '/api/data/users',
     { params }
   )
+  return res.data
+}
+
+export async function getUsageLeaderboard(
+  limit = 10,
+  period: UsageLeaderboardPeriod = 'all'
+) {
+  const res = await api.get<{
+    success: boolean
+    data: UsageLeaderboardItem[]
+  }>('/api/user/usage/leaderboard', {
+    params: { limit, period },
+  })
   return res.data
 }
 

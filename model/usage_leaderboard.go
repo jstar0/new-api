@@ -1,5 +1,16 @@
 package model
 
+import (
+	"strings"
+	"time"
+)
+
+const (
+	UsageLeaderboardPeriodDay  = "day"
+	UsageLeaderboardPeriodWeek = "week"
+	UsageLeaderboardPeriodAll  = "all"
+)
+
 type UsageLeaderboardItem struct {
 	Rank              int    `json:"rank"`
 	DisplayName       string `json:"display_name"`
@@ -23,10 +34,23 @@ type usageLeaderboardUserName struct {
 	DisplayName string
 }
 
-func GetUsageLeaderboard(limit int) ([]UsageLeaderboardItem, error) {
+func GetUsageLeaderboard(limit int, period string) ([]UsageLeaderboardItem, error) {
+	return getUsageLeaderboard(limit, period, time.Now())
+}
+
+func getUsageLeaderboard(limit int, period string, now time.Time) ([]UsageLeaderboardItem, error) {
 	if limit <= 0 || limit > 50 {
 		limit = 10
 	}
+
+	since := usageLeaderboardStartTime(period, now)
+	whereCreatedAt := ""
+	args := []any{LogTypeConsume}
+	if since > 0 {
+		whereCreatedAt = "\n\tAND created_at >= ?"
+		args = append(args, since)
+	}
+	args = append(args, limit)
 
 	rows := make([]usageLeaderboardRow, 0, limit)
 	err := LOG_DB.Raw(`
@@ -40,13 +64,13 @@ SELECT
 FROM logs
 WHERE user_id > 0
 	AND type = ?
+`+whereCreatedAt+`
 GROUP BY user_id
 HAVING SUM(COALESCE(prompt_tokens, 0) + COALESCE(completion_tokens, 0)) > 0
 	OR SUM(COALESCE(quota, 0)) > 0
 ORDER BY consume_tokens DESC, consume_quota DESC, request_count DESC, latest_consume_time DESC, user_id ASC
 LIMIT ?`,
-		LogTypeConsume,
-		limit,
+		args...,
 	).Scan(&rows).Error
 	if err != nil {
 		return nil, err
@@ -89,4 +113,28 @@ LIMIT ?`,
 		})
 	}
 	return items, nil
+}
+
+func usageLeaderboardStartTime(period string, now time.Time) int64 {
+	switch normalizeUsageLeaderboardPeriod(period) {
+	case UsageLeaderboardPeriodDay:
+		return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).Unix()
+	case UsageLeaderboardPeriodWeek:
+		startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		daysSinceMonday := (int(now.Weekday()) + 6) % 7
+		return startOfDay.AddDate(0, 0, -daysSinceMonday).Unix()
+	default:
+		return 0
+	}
+}
+
+func normalizeUsageLeaderboardPeriod(period string) string {
+	switch strings.ToLower(strings.TrimSpace(period)) {
+	case UsageLeaderboardPeriodDay, "daily", "today":
+		return UsageLeaderboardPeriodDay
+	case UsageLeaderboardPeriodWeek, "weekly", "this_week":
+		return UsageLeaderboardPeriodWeek
+	default:
+		return UsageLeaderboardPeriodAll
+	}
 }
