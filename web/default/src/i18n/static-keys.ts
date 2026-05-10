@@ -395,11 +395,8 @@ export const STATIC_I18N_KEYS = [
   'Actions',
 
   // Sidebar modules
-  'Chat Area',
-  'Playground and chat functions',
   'Playground',
   'AI model testing environment',
-  'Chat session management',
   'Console Area',
   'Data management and log viewing',
   'Dashboard',
@@ -410,8 +407,6 @@ export const STATIC_I18N_KEYS = [
   'API usage records',
   'Drawing Logs',
   'Drawing task records',
-  'Task Logs',
-  'System task records',
   'Personal Center Area',
   'User personal functions',
   'Wallet Management',
