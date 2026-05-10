@@ -25,7 +25,7 @@ import { ChevronLeft } from 'lucide-react';
 import { useSidebarCollapsed } from '../../hooks/common/useSidebarCollapsed';
 import { useSidebar } from '../../hooks/common/useSidebar';
 import { useMinimumLoadingTime } from '../../hooks/common/useMinimumLoadingTime';
-import { isAdmin, isRoot, showError } from '../../helpers';
+import { isAdmin, isRoot } from '../../helpers';
 import SkeletonWrapper from './components/SkeletonWrapper';
 
 import { Nav, Divider, Button } from '@douyinfe/semi-ui';
@@ -44,7 +44,6 @@ const routerMap = {
   about: '/about',
   detail: '/console',
   pricing: '/pricing',
-  task: '/console/task',
   models: '/console/models',
   deployment: '/console/deployment',
   playground: '/console/playground',
@@ -63,10 +62,8 @@ const SiderBar = ({ onNavigate = () => {} }) => {
   const showSkeleton = useMinimumLoadingTime(sidebarLoading, 200);
 
   const [selectedKeys, setSelectedKeys] = useState(['home']);
-  const [chatItems, setChatItems] = useState([]);
   const [openedKeys, setOpenedKeys] = useState([]);
   const location = useLocation();
-  const [routerMapState, setRouterMapState] = useState(routerMap);
 
   const workspaceItems = useMemo(() => {
     const items = [
@@ -98,13 +95,6 @@ const SiderBar = ({ onNavigate = () => {} }) => {
             ? ''
             : 'tableHiddle',
       },
-      {
-        text: t('任务日志'),
-        itemKey: 'task',
-        to: '/task',
-        className:
-          localStorage.getItem('enable_task') === 'true' ? '' : 'tableHiddle',
-      },
     ];
 
     // 根据配置过滤项目
@@ -117,7 +107,6 @@ const SiderBar = ({ onNavigate = () => {} }) => {
   }, [
     localStorage.getItem('enable_data_export'),
     localStorage.getItem('enable_drawing'),
-    localStorage.getItem('enable_task'),
     t,
     isModuleVisible,
   ]);
@@ -200,99 +189,18 @@ const SiderBar = ({ onNavigate = () => {} }) => {
     return filteredItems;
   }, [isAdmin(), isRoot(), t, isModuleVisible]);
 
-  const chatMenuItems = useMemo(() => {
-    const items = [
-      {
-        text: t('操练场'),
-        itemKey: 'playground',
-        to: '/playground',
-      },
-      {
-        text: t('聊天'),
-        itemKey: 'chat',
-        items: chatItems,
-      },
-    ];
-
-    // 根据配置过滤项目
-    const filteredItems = items.filter((item) => {
-      const configVisible = isModuleVisible('chat', item.itemKey);
-      return configVisible;
-    });
-
-    return filteredItems;
-  }, [chatItems, t, isModuleVisible]);
-
-  // 更新路由映射，添加聊天路由
-  const updateRouterMapWithChats = (chats) => {
-    const newRouterMap = { ...routerMap };
-
-    if (Array.isArray(chats) && chats.length > 0) {
-      for (let i = 0; i < chats.length; i++) {
-        newRouterMap['chat' + i] = '/console/chat/' + i;
-      }
-    }
-
-    setRouterMapState(newRouterMap);
-    return newRouterMap;
-  };
-
-  // 加载聊天项
-  useEffect(() => {
-    let chats = localStorage.getItem('chats');
-    if (chats) {
-      try {
-        chats = JSON.parse(chats);
-        if (Array.isArray(chats)) {
-          let chatItems = [];
-          for (let i = 0; i < chats.length; i++) {
-            let shouldSkip = false;
-            let chat = {};
-            for (let key in chats[i]) {
-              let link = chats[i][key];
-              if (typeof link !== 'string') continue; // 确保链接是字符串
-              if (link.startsWith('fluent') || link.startsWith('ccswitch')) {
-                shouldSkip = true;
-                break;
-              }
-              chat.text = key;
-              chat.itemKey = 'chat' + i;
-              chat.to = '/console/chat/' + i;
-            }
-            if (shouldSkip || !chat.text) continue; // 避免推入空项
-            chatItems.push(chat);
-          }
-          setChatItems(chatItems);
-          updateRouterMapWithChats(chats);
-        }
-      } catch (e) {
-        showError('聊天数据解析失败');
-      }
-    }
-  }, []);
-
   // 根据当前路径设置选中的菜单项
   useEffect(() => {
     const currentPath = location.pathname;
-    let matchingKey = Object.keys(routerMapState).find(
-      (key) => routerMapState[key] === currentPath,
+    let matchingKey = Object.keys(routerMap).find(
+      (key) => routerMap[key] === currentPath,
     );
-
-    // 处理聊天路由
-    if (!matchingKey && currentPath.startsWith('/console/chat/')) {
-      const chatIndex = currentPath.split('/').pop();
-      if (!isNaN(chatIndex)) {
-        matchingKey = 'chat' + chatIndex;
-      } else {
-        matchingKey = 'chat';
-      }
-    }
 
     // 如果找到匹配的键，更新选中的键
     if (matchingKey) {
       setSelectedKeys([matchingKey]);
     }
-  }, [location.pathname, routerMapState]);
+  }, [location.pathname]);
 
   // 监控折叠状态变化以更新 body class
   useEffect(() => {
@@ -410,8 +318,7 @@ const SiderBar = ({ onNavigate = () => {} }) => {
           hoverStyle='sidebar-nav-item:hover'
           selectedStyle='sidebar-nav-item-selected'
           renderWrapper={({ itemElement, props }) => {
-            const to =
-              routerMapState[props.itemKey] || routerMap[props.itemKey];
+            const to = routerMap[props.itemKey];
 
             // 如果没有路由，直接返回元素
             if (!to) return itemElement;
@@ -439,16 +346,6 @@ const SiderBar = ({ onNavigate = () => {} }) => {
             setOpenedKeys(data.openKeys);
           }}
         >
-          {/* 聊天区域 */}
-          {hasSectionVisibleModules('chat') && (
-            <div className='sidebar-section'>
-              {!collapsed && (
-                <div className='sidebar-group-label'>{t('聊天')}</div>
-              )}
-              {chatMenuItems.map((item) => renderSubItem(item))}
-            </div>
-          )}
-
           {/* 控制台区域 */}
           {hasSectionVisibleModules('console') && (
             <>

@@ -40,18 +40,12 @@ export default function SettingsSidebarModulesAdmin(props) {
 
   // 左侧边栏模块管理状态（管理员全局控制）
   const [sidebarModulesAdmin, setSidebarModulesAdmin] = useState({
-    chat: {
-      enabled: true,
-      playground: true,
-      chat: true,
-    },
     console: {
       enabled: true,
       detail: true,
       token: true,
       log: true,
       midjourney: true,
-      task: true,
     },
     personal: {
       enabled: true,
@@ -101,18 +95,12 @@ export default function SettingsSidebarModulesAdmin(props) {
   // 重置为默认配置
   function resetSidebarModules() {
     const defaultModules = {
-      chat: {
-        enabled: true,
-        playground: true,
-        chat: true,
-      },
       console: {
         enabled: true,
         detail: true,
         token: true,
         log: true,
         midjourney: true,
-        task: true,
       },
       personal: {
         enabled: true,
@@ -178,14 +166,12 @@ export default function SettingsSidebarModulesAdmin(props) {
       } catch (error) {
         // 使用默认配置
         const defaultModules = {
-          chat: { enabled: true, playground: true, chat: true },
           console: {
             enabled: true,
             detail: true,
             token: true,
             log: true,
             midjourney: true,
-            task: true,
           },
           personal: { enabled: true, topup: true, personal: true },
           admin: {
@@ -207,19 +193,6 @@ export default function SettingsSidebarModulesAdmin(props) {
   // 区域配置数据
   const sectionConfigs = [
     {
-      key: 'chat',
-      title: t('聊天区域'),
-      description: t('操练场和聊天功能'),
-      modules: [
-        {
-          key: 'playground',
-          title: t('操练场'),
-          description: t('AI模型测试环境'),
-        },
-        { key: 'chat', title: t('聊天'), description: t('聊天会话管理') },
-      ],
-    },
-    {
       key: 'console',
       title: t('控制台区域'),
       description: t('数据管理和日志查看'),
@@ -232,7 +205,6 @@ export default function SettingsSidebarModulesAdmin(props) {
           title: t('绘图日志'),
           description: t('绘图任务记录'),
         },
-        { key: 'task', title: t('任务日志'), description: t('系统任务记录') },
       ],
     },
     {

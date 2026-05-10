@@ -19,7 +19,7 @@ import {
 } from './section-registry'
 
 const route = getRouteApi('/_authenticated/usage-logs/$section')
-const TASK_LOG_SECTIONS = ['drawing', 'task'] as const
+const DRAWING_LOG_SECTIONS = ['drawing'] as const
 
 const SECTION_META: Record<
   UsageLogsSectionId,
@@ -32,10 +32,6 @@ const SECTION_META: Record<
   drawing: {
     titleKey: 'Drawing Logs',
     descriptionKey: 'View and manage your drawing logs',
-  },
-  task: {
-    titleKey: 'Task Logs',
-    descriptionKey: 'View and manage your task logs',
   },
 }
 
@@ -58,8 +54,8 @@ function UsageLogsContent() {
   const tabNavGroups = useMemo<NavGroup[]>(
     () => [
       {
-        title: 'Task Logs',
-        items: TASK_LOG_SECTIONS.map((section) => ({
+        title: 'Drawing Logs',
+        items: DRAWING_LOG_SECTIONS.map((section) => ({
           title: SECTION_META[section].titleKey,
           url: `/usage-logs/${section}`,
         })),
@@ -91,8 +87,7 @@ function UsageLogsContent() {
     [navigate]
   )
 
-  const pageMeta =
-    activeCategory === 'common' ? SECTION_META.common : SECTION_META.task
+  const pageMeta = SECTION_META[activeCategory]
   const showTaskSwitcher =
     activeCategory !== 'common' && visibleSections.length > 1
 

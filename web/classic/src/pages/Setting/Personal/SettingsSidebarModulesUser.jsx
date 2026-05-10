@@ -68,15 +68,6 @@ export default function SettingsSidebarModulesUser() {
   const generateDefaultConfig = () => {
     const defaultConfig = {};
 
-    // 聊天区域 - 所有用户都可以访问
-    if (isSidebarSectionAllowed('chat')) {
-      defaultConfig.chat = {
-        enabled: true,
-        playground: isSidebarModuleAllowed('chat', 'playground'),
-        chat: isSidebarModuleAllowed('chat', 'chat'),
-      };
-    }
-
     // 控制台区域 - 所有用户都可以访问
     if (isSidebarSectionAllowed('console')) {
       defaultConfig.console = {
@@ -85,7 +76,6 @@ export default function SettingsSidebarModulesUser() {
         token: isSidebarModuleAllowed('console', 'token'),
         log: isSidebarModuleAllowed('console', 'log'),
         midjourney: isSidebarModuleAllowed('console', 'midjourney'),
-        task: isSidebarModuleAllowed('console', 'task'),
       };
     }
 
@@ -291,19 +281,6 @@ export default function SettingsSidebarModulesUser() {
   // 区域配置数据（根据后端权限过滤）
   const sectionConfigs = [
     {
-      key: 'chat',
-      title: t('聊天区域'),
-      description: t('操练场和聊天功能'),
-      modules: [
-        {
-          key: 'playground',
-          title: t('操练场'),
-          description: t('AI模型测试环境'),
-        },
-        { key: 'chat', title: t('聊天'), description: t('聊天会话管理') },
-      ],
-    },
-    {
       key: 'console',
       title: t('控制台区域'),
       description: t('数据管理和日志查看'),
@@ -316,7 +293,6 @@ export default function SettingsSidebarModulesUser() {
           title: t('绘图日志'),
           description: t('绘图任务记录'),
         },
-        { key: 'task', title: t('任务日志'), description: t('系统任务记录') },
       ],
     },
     {

@@ -67,9 +67,8 @@ WHERE user_id > 0
 	AND type = ?
 `+whereCreatedAt+`
 GROUP BY user_id
-HAVING SUM(COALESCE(prompt_tokens, 0) + COALESCE(completion_tokens, 0)) > 0
-	OR SUM(COALESCE(quota, 0)) > 0
-ORDER BY consume_tokens DESC, consume_quota DESC, request_count DESC, latest_consume_time DESC, user_id ASC
+HAVING SUM(COALESCE(quota, 0)) > 0
+ORDER BY consume_quota DESC, request_count DESC, consume_tokens DESC, latest_consume_time DESC, user_id ASC
 LIMIT ?`,
 		args...,
 	).Scan(&rows).Error

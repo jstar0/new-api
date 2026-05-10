@@ -14,7 +14,10 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getUsageLeaderboard } from '@/features/dashboard/api'
-import type { UsageLeaderboardPeriod } from '@/features/dashboard/types'
+import type {
+  UsageLeaderboardItem,
+  UsageLeaderboardPeriod,
+} from '@/features/dashboard/types'
 import { PanelWrapper } from '../ui/panel-wrapper'
 
 const USAGE_LEADERBOARD_REFRESH_INTERVAL = 15 * 60 * 1000
@@ -28,11 +31,44 @@ const USAGE_LEADERBOARD_PERIODS: Array<{
   { value: 'month', label: 'Monthly Ranking' },
 ]
 
+const USAGE_LEADERBOARD_PODIUM_ORDER = [2, 1, 3] as const
+
 function getRankClassName(rank: number): string {
   if (rank === 1) return 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
   if (rank === 2) return 'bg-slate-500/15 text-slate-700 dark:text-slate-300'
   if (rank === 3) return 'bg-orange-500/15 text-orange-700 dark:text-orange-300'
   return 'bg-muted text-muted-foreground'
+}
+
+function getPodiumMeta(rank: number) {
+  if (rank === 1) {
+    return {
+      title: 'Quota Champion',
+      note: 'Highest quota usage this period',
+      className:
+        'border-amber-200 bg-amber-50/80 dark:border-amber-400/30 dark:bg-amber-400/10 md:min-h-44',
+      badgeClassName: 'bg-amber-500 text-white shadow-amber-500/25',
+      valueClassName: 'text-amber-700 dark:text-amber-300',
+    }
+  }
+  if (rank === 2) {
+    return {
+      title: 'Power Contributor',
+      note: 'Steady high-value usage',
+      className:
+        'border-slate-200 bg-slate-50/80 dark:border-slate-400/30 dark:bg-slate-400/10 md:min-h-36',
+      badgeClassName: 'bg-slate-500 text-white shadow-slate-500/20',
+      valueClassName: 'text-slate-700 dark:text-slate-300',
+    }
+  }
+  return {
+    title: 'Rising Spender',
+    note: 'Still climbing this period',
+    className:
+      'border-orange-200 bg-orange-50/80 dark:border-orange-400/30 dark:bg-orange-400/10 md:min-h-36',
+    badgeClassName: 'bg-orange-500 text-white shadow-orange-500/20',
+    valueClassName: 'text-orange-700 dark:text-orange-300',
+  }
 }
 
 export function UsageLeaderboardPanel() {
@@ -46,17 +82,20 @@ export function UsageLeaderboardPanel() {
   })
 
   const items = usageLeaderboardQuery.data?.data ?? []
+  const podiumItems = USAGE_LEADERBOARD_PODIUM_ORDER.map((rank) =>
+    items.find((item) => item.rank === rank)
+  ).filter((item): item is UsageLeaderboardItem => Boolean(item))
 
   return (
     <PanelWrapper
       title={
         <span className='inline-flex items-center gap-2'>
           <Trophy className='text-primary size-4' />
-          {t('Token Usage Leaderboard')}
+          {t('Quota Usage Leaderboard')}
         </span>
       }
       description={t(
-        'Top users by token consumption, refreshed every 15 minutes'
+        'Top users by quota consumption, refreshed every 15 minutes'
       )}
       loading={usageLeaderboardQuery.isLoading}
       empty={!usageLeaderboardQuery.isLoading && items.length === 0}
@@ -80,15 +119,62 @@ export function UsageLeaderboardPanel() {
         </Tabs>
       }
     >
+      {podiumItems.length > 0 && (
+        <div className='mb-4 grid gap-3 md:grid-cols-3 md:items-end'>
+          {podiumItems.map((item) => {
+            const meta = getPodiumMeta(item.rank)
+            return (
+              <div
+                key={`podium-${item.rank}-${item.display_name}`}
+                className={cn(
+                  'flex flex-col items-center rounded-lg border px-3 py-4 text-center shadow-xs',
+                  meta.className
+                )}
+              >
+                <div
+                  className={cn(
+                    'mb-2 flex size-11 items-center justify-center rounded-full text-sm font-bold shadow-lg',
+                    meta.badgeClassName
+                  )}
+                >
+                  #{item.rank}
+                </div>
+                <div className='max-w-40 truncate text-sm font-semibold'>
+                  {item.display_name}
+                </div>
+                <div
+                  className={cn(
+                    'mt-1 text-xs font-medium',
+                    meta.valueClassName
+                  )}
+                >
+                  {t(meta.title)}
+                </div>
+                <div className='text-muted-foreground mt-1 text-xs'>
+                  {t(meta.note)}
+                </div>
+                <div
+                  className={cn(
+                    'mt-3 text-xl font-semibold tabular-nums',
+                    meta.valueClassName
+                  )}
+                >
+                  {formatQuota(item.consume_quota)}
+                </div>
+                <div className='text-muted-foreground text-xs'>
+                  {t('Consumed Quota')}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className='w-16'>{t('Rank')}</TableHead>
             <TableHead>{t('User')}</TableHead>
-            <TableHead className='text-right'>{t('Consumed Tokens')}</TableHead>
-            <TableHead className='hidden text-right sm:table-cell'>
-              {t('Consumed Quota')}
-            </TableHead>
+            <TableHead className='text-right'>{t('Consumed Quota')}</TableHead>
             <TableHead className='hidden text-right md:table-cell'>
               {t('Request Count')}
             </TableHead>
@@ -113,9 +199,6 @@ export function UsageLeaderboardPanel() {
                 </div>
               </TableCell>
               <TableCell className='text-right font-medium tabular-nums'>
-                {formatNumber(item.consume_tokens)}
-              </TableCell>
-              <TableCell className='text-muted-foreground hidden text-right tabular-nums sm:table-cell'>
                 {formatQuota(item.consume_quota)}
               </TableCell>
               <TableCell className='text-muted-foreground hidden text-right tabular-nums md:table-cell'>

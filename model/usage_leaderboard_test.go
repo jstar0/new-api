@@ -9,12 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetUsageLeaderboardRanksByConsumedTokens(t *testing.T) {
+func TestGetUsageLeaderboardRanksByConsumedQuota(t *testing.T) {
 	truncateTables(t)
 
 	insertAffLeaderboardUser(t, &User{Id: 1, Username: "alice", DisplayName: "Alice User"})
 	insertAffLeaderboardUser(t, &User{Id: 2, Username: "bob@example.com"})
 	insertAffLeaderboardUser(t, &User{Id: 3, Username: "ignored-user"})
+	insertAffLeaderboardUser(t, &User{Id: 4, Username: "free-model-user"})
 
 	require.NoError(t, LOG_DB.Create(&Log{
 		UserId:           1,
@@ -61,23 +62,32 @@ func TestGetUsageLeaderboardRanksByConsumedTokens(t *testing.T) {
 		Quota:            999,
 		CreatedAt:        140,
 	}).Error)
+	require.NoError(t, LOG_DB.Create(&Log{
+		UserId:           4,
+		Username:         "free-model-user",
+		Type:             LogTypeConsume,
+		PromptTokens:     9999,
+		CompletionTokens: 9999,
+		Quota:            0,
+		CreatedAt:        150,
+	}).Error)
 
 	leaderboard, err := GetUsageLeaderboard(10, "all")
 	require.NoError(t, err)
 	require.Len(t, leaderboard, 2)
 
 	assert.Equal(t, 1, leaderboard[0].Rank)
-	assert.False(t, strings.Contains(leaderboard[0].DisplayName, "@"), "email-like usernames should be masked")
-	assert.EqualValues(t, 1, leaderboard[0].RequestCount)
-	assert.EqualValues(t, 2200, leaderboard[0].ConsumeTokens)
-	assert.EqualValues(t, 90, leaderboard[0].ConsumeQuota)
-	assert.EqualValues(t, 120, leaderboard[0].LatestConsumeTime)
+	assert.EqualValues(t, 2, leaderboard[0].RequestCount)
+	assert.EqualValues(t, 2000, leaderboard[0].ConsumeTokens)
+	assert.EqualValues(t, 150, leaderboard[0].ConsumeQuota)
+	assert.EqualValues(t, 110, leaderboard[0].LatestConsumeTime)
 
 	assert.Equal(t, 2, leaderboard[1].Rank)
-	assert.EqualValues(t, 2, leaderboard[1].RequestCount)
-	assert.EqualValues(t, 2000, leaderboard[1].ConsumeTokens)
-	assert.EqualValues(t, 150, leaderboard[1].ConsumeQuota)
-	assert.EqualValues(t, 110, leaderboard[1].LatestConsumeTime)
+	assert.False(t, strings.Contains(leaderboard[1].DisplayName, "@"), "email-like usernames should be masked")
+	assert.EqualValues(t, 1, leaderboard[1].RequestCount)
+	assert.EqualValues(t, 2200, leaderboard[1].ConsumeTokens)
+	assert.EqualValues(t, 90, leaderboard[1].ConsumeQuota)
+	assert.EqualValues(t, 120, leaderboard[1].LatestConsumeTime)
 }
 
 func TestGetUsageLeaderboardFiltersByPeriod(t *testing.T) {

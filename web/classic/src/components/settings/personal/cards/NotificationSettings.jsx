@@ -64,18 +64,12 @@ const NotificationSettings = ({
   const [sidebarLoading, setSidebarLoading] = useState(false);
   const [activeTabKey, setActiveTabKey] = useState('notification');
   const [sidebarModulesUser, setSidebarModulesUser] = useState({
-    chat: {
-      enabled: true,
-      playground: true,
-      chat: true,
-    },
     console: {
       enabled: true,
       detail: true,
       token: true,
       log: true,
       midjourney: true,
-      task: true,
     },
     personal: {
       enabled: true,
@@ -156,14 +150,12 @@ const NotificationSettings = ({
 
   const resetSidebarModules = () => {
     const defaultConfig = {
-      chat: { enabled: true, playground: true, chat: true },
       console: {
         enabled: true,
         detail: true,
         token: true,
         log: true,
         midjourney: true,
-        task: true,
       },
       personal: { enabled: true, topup: true, personal: true },
       admin: {
@@ -245,19 +237,6 @@ const NotificationSettings = ({
   // 区域配置数据（根据权限过滤）
   const sectionConfigs = [
     {
-      key: 'chat',
-      title: t('聊天区域'),
-      description: t('操练场和聊天功能'),
-      modules: [
-        {
-          key: 'playground',
-          title: t('操练场'),
-          description: t('AI模型测试环境'),
-        },
-        { key: 'chat', title: t('聊天'), description: t('聊天会话管理') },
-      ],
-    },
-    {
       key: 'console',
       title: t('控制台区域'),
       description: t('数据管理和日志查看'),
@@ -270,7 +249,6 @@ const NotificationSettings = ({
           title: t('绘图日志'),
           description: t('绘图任务记录'),
         },
-        { key: 'task', title: t('任务日志'), description: t('系统任务记录') },
       ],
     },
     {
@@ -478,7 +456,10 @@ const NotificationSettings = ({
                     checkedText={t('开')}
                     uncheckedText={t('关')}
                     onChange={(value) =>
-                      handleFormChange('upstreamModelUpdateNotifyEnabled', value)
+                      handleFormChange(
+                        'upstreamModelUpdateNotifyEnabled',
+                        value,
+                      )
                     }
                     extraText={t(
                       '仅管理员可用。开启后，当系统定时检测全部渠道发现上游模型变更或检测异常时，将按你选择的通知方式发送汇总通知；渠道或模型过多时会自动省略部分明细。',
