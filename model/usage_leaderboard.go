@@ -6,9 +6,10 @@ import (
 )
 
 const (
-	UsageLeaderboardPeriodDay  = "day"
-	UsageLeaderboardPeriodWeek = "week"
-	UsageLeaderboardPeriodAll  = "all"
+	UsageLeaderboardPeriodDay   = "day"
+	UsageLeaderboardPeriodWeek  = "week"
+	UsageLeaderboardPeriodMonth = "month"
+	UsageLeaderboardPeriodAll   = "all"
 )
 
 type UsageLeaderboardItem struct {
@@ -123,6 +124,8 @@ func usageLeaderboardStartTime(period string, now time.Time) int64 {
 		startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 		daysSinceMonday := (int(now.Weekday()) + 6) % 7
 		return startOfDay.AddDate(0, 0, -daysSinceMonday).Unix()
+	case UsageLeaderboardPeriodMonth:
+		return time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).Unix()
 	default:
 		return 0
 	}
@@ -134,6 +137,8 @@ func normalizeUsageLeaderboardPeriod(period string) string {
 		return UsageLeaderboardPeriodDay
 	case UsageLeaderboardPeriodWeek, "weekly", "this_week":
 		return UsageLeaderboardPeriodWeek
+	case UsageLeaderboardPeriodMonth, "monthly", "this_month":
+		return UsageLeaderboardPeriodMonth
 	default:
 		return UsageLeaderboardPeriodAll
 	}

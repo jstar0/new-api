@@ -24,7 +24,7 @@ export interface UsageLeaderboardItem {
   latest_consume_time: number
 }
 
-export type UsageLeaderboardPeriod = 'day' | 'week' | 'all'
+export type UsageLeaderboardPeriod = 'day' | 'week' | 'month'
 
 // ============================================================================
 // Uptime Monitoring Types

@@ -50,7 +50,7 @@ export async function getUserQuotaDataByUsers(params: {
 
 export async function getUsageLeaderboard(
   limit = 10,
-  period: UsageLeaderboardPeriod = 'all'
+  period: UsageLeaderboardPeriod = 'day'
 ) {
   const res = await api.get<{
     success: boolean

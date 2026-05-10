@@ -429,7 +429,7 @@ func GetUsageLeaderboard(c *gin.Context) {
 		limit = 10
 	}
 
-	leaderboard, err := model.GetUsageLeaderboard(limit, c.DefaultQuery("period", model.UsageLeaderboardPeriodAll))
+	leaderboard, err := model.GetUsageLeaderboard(limit, c.DefaultQuery("period", model.UsageLeaderboardPeriodDay))
 	if err != nil {
 		common.ApiError(c, err)
 		return

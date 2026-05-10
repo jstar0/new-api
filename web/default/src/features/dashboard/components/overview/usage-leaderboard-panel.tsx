@@ -25,7 +25,7 @@ const USAGE_LEADERBOARD_PERIODS: Array<{
 }> = [
   { value: 'day', label: 'Daily Ranking' },
   { value: 'week', label: 'Weekly Ranking' },
-  { value: 'all', label: 'All-time Ranking' },
+  { value: 'month', label: 'Monthly Ranking' },
 ]
 
 function getRankClassName(rank: number): string {

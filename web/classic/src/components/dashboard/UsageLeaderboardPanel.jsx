@@ -18,18 +18,24 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, Table, Tag, Typography } from '@douyinfe/semi-ui';
+import { Card, Table, Tag, Tabs, TabPane, Typography } from '@douyinfe/semi-ui';
 import { Activity } from 'lucide-react';
 import { API, renderQuota } from '../../helpers';
 
 const { Text } = Typography;
 const USAGE_LEADERBOARD_REFRESH_INTERVAL = 15 * 60 * 1000;
+const USAGE_LEADERBOARD_PERIODS = [
+  { value: 'day', label: '日榜' },
+  { value: 'week', label: '周榜' },
+  { value: 'month', label: '月榜' },
+];
 
 const formatInteger = (value) => Number(value || 0).toLocaleString();
 
 const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [period, setPeriod] = useState('day');
 
   useEffect(() => {
     let mounted = true;
@@ -39,9 +45,12 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
         setLoading(true);
       }
       try {
-        const res = await API.get('/api/user/usage/leaderboard?limit=10', {
-          skipErrorHandler: true,
-        });
+        const res = await API.get(
+          `/api/user/usage/leaderboard?limit=10&period=${period}`,
+          {
+            skipErrorHandler: true,
+          },
+        );
         if (mounted && res?.data?.success) {
           setLeaderboard(res.data.data || []);
         }
@@ -65,7 +74,7 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
       mounted = false;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [period]);
 
   const columns = useMemo(
     () => [
@@ -120,12 +129,23 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
         {...CARD_PROPS}
         className='shadow-sm !rounded-2xl'
         title={
-          <div className='flex items-center gap-2'>
-            <Activity size={16} />
-            <span>{t('Token 消耗排行榜')}</span>
-            <Tag color='white' shape='circle'>
-              {t('每15分钟更新')}
-            </Tag>
+          <div className='flex w-full flex-wrap items-center justify-between gap-2'>
+            <div className='flex items-center gap-2'>
+              <Activity size={16} />
+              <span>{t('Token 消耗排行榜')}</span>
+              <Tag color='white' shape='circle'>
+                {t('每15分钟更新')}
+              </Tag>
+            </div>
+            <Tabs activeKey={period} onChange={setPeriod} type='button'>
+              {USAGE_LEADERBOARD_PERIODS.map((item) => (
+                <TabPane
+                  key={item.value}
+                  tab={<span>{t(item.label)}</span>}
+                  itemKey={item.value}
+                />
+              ))}
+            </Tabs>
           </div>
         }
       >
