@@ -4,6 +4,7 @@ import { getSelf } from '@/lib/api'
 import { useStatus } from '@/hooks/use-status'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { SectionPageLayout } from '@/components/layout'
+import { getUsageRewards } from './api'
 import { AffiliateRewardsCard } from './components/affiliate-rewards-card'
 import { BillingHistoryDialog } from './components/dialogs/billing-history-dialog'
 import { CreemConfirmDialog } from './components/dialogs/creem-confirm-dialog'
@@ -11,6 +12,7 @@ import { PaymentConfirmDialog } from './components/dialogs/payment-confirm-dialo
 import { TransferDialog } from './components/dialogs/transfer-dialog'
 import { RechargeFormCard } from './components/recharge-form-card'
 import { SubscriptionPlansCard } from './components/subscription-plans-card'
+import { UsageRewardsCard } from './components/usage-rewards-card'
 import { WalletStatsCard } from './components/wallet-stats-card'
 import { DEFAULT_DISCOUNT_RATE } from './constants'
 import {
@@ -29,6 +31,7 @@ import {
 } from './lib'
 import type {
   UserWalletData,
+  UsageRewardRecord,
   PaymentMethod,
   PresetAmount,
   CreemProduct,
@@ -42,6 +45,8 @@ export function Wallet(props: WalletProps) {
   const { t } = useTranslation()
   const [user, setUser] = useState<UserWalletData | null>(null)
   const [userLoading, setUserLoading] = useState(true)
+  const [usageRewards, setUsageRewards] = useState<UsageRewardRecord[]>([])
+  const [usageRewardsLoading, setUsageRewardsLoading] = useState(true)
   const [topupAmount, setTopupAmount] = useState(0)
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null)
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
@@ -101,9 +106,25 @@ export function Wallet(props: WalletProps) {
     }
   }, [])
 
+  const fetchUsageRewards = useCallback(async () => {
+    try {
+      setUsageRewardsLoading(true)
+      const response = await getUsageRewards(10)
+      if (response.success && response.data) {
+        setUsageRewards(response.data)
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to fetch usage rewards:', error)
+    } finally {
+      setUsageRewardsLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     fetchUser()
-  }, [fetchUser])
+    fetchUsageRewards()
+  }, [fetchUser, fetchUsageRewards])
 
   useEffect(() => {
     if (props.initialShowHistory) {
@@ -249,6 +270,10 @@ export function Wallet(props: WalletProps) {
         <SectionPageLayout.Content>
           <div className='mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-5'>
             <WalletStatsCard user={user} loading={userLoading} />
+            <UsageRewardsCard
+              rewards={usageRewards}
+              loading={usageRewardsLoading}
+            />
 
             <div
               className={

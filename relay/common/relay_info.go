@@ -121,6 +121,8 @@ type RelayInfo struct {
 	SendResponseCount      int
 	ReceivedResponseCount  int
 	FinalPreConsumedQuota  int // 最终预消耗的配额
+	RewardPreConsumedQuota int // 钱包计费中已预扣的奖励额度
+	WalletPreConsumedQuota int // 钱包计费中已预扣的钱包额度
 	// ForcePreConsume 为 true 时禁用 BillingSession 的信任额度旁路，
 	// 强制预扣全额。用于异步任务（视频/音乐生成等），因为请求返回后任务仍在运行，
 	// 必须在提交前锁定全额。
@@ -252,6 +254,7 @@ func (info *RelayInfo) ToString() string {
 	fmt.Fprintf(b, "DisablePing: %t, ", info.DisablePing)
 	fmt.Fprintf(b, "SendResponseCount: %d, ", info.SendResponseCount)
 	fmt.Fprintf(b, "FinalPreConsumedQuota: %d, ", info.FinalPreConsumedQuota)
+	fmt.Fprintf(b, "RewardPreConsumedQuota: %d, WalletPreConsumedQuota: %d, ", info.RewardPreConsumedQuota, info.WalletPreConsumedQuota)
 
 	// User & token info (mask secrets)
 	fmt.Fprintf(b, "User{ Id: %d, Email: %q, Group: %q, UsingGroup: %q, Quota: %d }, ",

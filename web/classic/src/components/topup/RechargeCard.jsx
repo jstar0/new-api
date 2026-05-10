@@ -90,6 +90,8 @@ const RechargeCard = ({
   statusLoading,
   topupInfo,
   onOpenHistory,
+  usageRewards = [],
+  usageRewardsLoading = false,
   enableWaffoTopUp,
   enableWaffoPancakeTopUp,
   subscriptionLoading = false,
@@ -145,7 +147,7 @@ const RechargeCard = ({
               </div>
 
               {/* 统计数据 */}
-              <div className='grid grid-cols-3 gap-6 mt-4'>
+              <div className='grid grid-cols-2 gap-4 mt-4 sm:grid-cols-4 sm:gap-6'>
                 {/* 当前余额 */}
                 <div className='text-center'>
                   <div
@@ -167,6 +169,31 @@ const RechargeCard = ({
                       }}
                     >
                       {t('当前余额')}
+                    </Text>
+                  </div>
+                </div>
+
+                {/* 奖励额度 */}
+                <div className='text-center'>
+                  <div
+                    className='text-base sm:text-2xl font-bold mb-2'
+                    style={{ color: 'white' }}
+                  >
+                    {renderQuota(userState?.user?.reward_quota || 0)}
+                  </div>
+                  <div className='flex items-center justify-center text-sm'>
+                    <IconGift
+                      size={14}
+                      className='mr-1'
+                      style={{ color: 'rgba(255,255,255,0.8)' }}
+                    />
+                    <Text
+                      style={{
+                        color: 'rgba(255,255,255,0.8)',
+                        fontSize: '12px',
+                      }}
+                    >
+                      {t('奖励额度')}
                     </Text>
                   </div>
                 </div>
@@ -225,6 +252,49 @@ const RechargeCard = ({
           </div>
         }
       >
+        <div className='mb-4 rounded-xl border border-amber-100 bg-amber-50/70 px-4 py-3'>
+          <div className='mb-2 flex flex-wrap items-center justify-between gap-2'>
+            <div>
+              <Text strong>{t('排行奖励记录')}</Text>
+              <div className='mt-1'>
+                <Text type='tertiary' size='small'>
+                  {t('每日 00:00 结算，奖励额度优先抵扣')}
+                </Text>
+              </div>
+            </div>
+            <Tag color='yellow' shape='circle'>
+              {t('1名5% · 2名4% · 3名3% · 4-10名1%')}
+            </Tag>
+          </div>
+          {usageRewardsLoading ? (
+            <Skeleton.Title active style={{ width: '100%', height: 42 }} />
+          ) : usageRewards.length === 0 ? (
+            <Text type='tertiary' size='small'>
+              {t('暂无排行奖励记录')}
+            </Text>
+          ) : (
+            <div className='space-y-2'>
+              {usageRewards.slice(0, 3).map((item) => (
+                <div
+                  key={item.id}
+                  className='flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white/80 px-3 py-2'
+                >
+                  <div className='flex flex-wrap items-center gap-2'>
+                    <Text strong>{item.period_date}</Text>
+                    <Tag color='white'>#{item.rank}</Tag>
+                    <Tag color='yellow'>
+                      {((item.reward_rate || 0) / 100).toFixed(0)}%
+                    </Tag>
+                  </div>
+                  <Text
+                    strong
+                  >{`+${renderQuota(item.reward_quota || 0)}`}</Text>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* 在线充值表单 */}
         {statusLoading ? (
           <div className='py-8 flex justify-center'>

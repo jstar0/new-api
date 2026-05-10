@@ -1,7 +1,6 @@
 package model
 
 import (
-	"strings"
 	"testing"
 	"time"
 
@@ -83,7 +82,7 @@ func TestGetUsageLeaderboardRanksByConsumedQuota(t *testing.T) {
 	assert.EqualValues(t, 110, leaderboard[0].LatestConsumeTime)
 
 	assert.Equal(t, 2, leaderboard[1].Rank)
-	assert.False(t, strings.Contains(leaderboard[1].DisplayName, "@"), "email-like usernames should be masked")
+	assert.Equal(t, "bob@example.com", leaderboard[1].DisplayName)
 	assert.EqualValues(t, 1, leaderboard[1].RequestCount)
 	assert.EqualValues(t, 2200, leaderboard[1].ConsumeTokens)
 	assert.EqualValues(t, 90, leaderboard[1].ConsumeQuota)

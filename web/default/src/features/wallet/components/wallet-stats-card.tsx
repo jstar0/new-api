@@ -1,4 +1,4 @@
-import { Activity, BarChart3, WalletCards } from 'lucide-react'
+import { Activity, BarChart3, Gift, WalletCards } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { formatQuota } from '@/lib/format'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -14,8 +14,8 @@ export function WalletStatsCard(props: WalletStatsCardProps) {
   if (props.loading) {
     return (
       <div className='overflow-hidden rounded-lg border'>
-        <div className='divide-border/60 grid grid-cols-3 divide-x'>
-          {Array.from({ length: 3 }).map((_, i) => (
+        <div className='divide-border/60 grid grid-cols-2 divide-x md:grid-cols-4'>
+          {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className='px-3 py-3 sm:px-5 sm:py-4'>
               <Skeleton className='h-3.5 w-20' />
               <Skeleton className='mt-2 h-7 w-28' />
@@ -35,6 +35,12 @@ export function WalletStatsCard(props: WalletStatsCardProps) {
       icon: WalletCards,
     },
     {
+      label: t('Reward Balance'),
+      value: formatQuota(props.user?.reward_quota ?? 0),
+      description: t('Used before wallet balance'),
+      icon: Gift,
+    },
+    {
       label: t('Total Usage'),
       value: formatQuota(props.user?.used_quota ?? 0),
       description: t('Total consumed quota'),
@@ -50,7 +56,7 @@ export function WalletStatsCard(props: WalletStatsCardProps) {
 
   return (
     <div className='overflow-hidden rounded-lg border'>
-      <div className='divide-border/60 grid grid-cols-3 divide-x'>
+      <div className='divide-border/60 grid grid-cols-2 divide-x md:grid-cols-4'>
         {stats.map((item) => (
           <div key={item.label} className='px-3 py-3 sm:px-5 sm:py-4'>
             <div className='flex items-center gap-2'>

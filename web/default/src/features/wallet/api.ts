@@ -12,6 +12,7 @@ import type {
   StripePaymentResponse,
   AffiliateCodeResponse,
   AffiliateTransferResponse,
+  UsageRewardsResponse,
   BillingHistoryResponse,
   CompleteOrderRequest,
   CreemPaymentRequest,
@@ -165,6 +166,16 @@ export async function transferAffiliateQuota(
   request: AffiliateTransferRequest
 ): Promise<AffiliateTransferResponse> {
   const res = await api.post('/api/user/aff_transfer', request)
+  return res.data
+}
+
+/**
+ * Get current user's usage ranking reward records
+ */
+export async function getUsageRewards(
+  limit = 10
+): Promise<UsageRewardsResponse> {
+  const res = await api.get(`/api/user/usage/rewards?limit=${limit}`)
   return res.data
 }
 

@@ -5,6 +5,7 @@ import { getOptionValue, useSystemOptions } from '../hooks/use-system-options'
 import type { ContentSettings } from '../types'
 import {
   CONTENT_DEFAULT_SECTION,
+  type ContentSectionId,
   getContentSectionContent,
 } from './section-registry.tsx'
 
@@ -92,14 +93,8 @@ export function ContentSettings() {
     )
   }
 
-  const activeSection = (params?.section ?? CONTENT_DEFAULT_SECTION) as
-    | 'dashboard'
-    | 'announcements'
-    | 'api-info'
-    | 'faq'
-    | 'uptime-kuma'
-    | 'chat'
-    | 'drawing'
+  const activeSection = (params?.section ??
+    CONTENT_DEFAULT_SECTION) as ContentSectionId
   const sectionContent = getContentSectionContent(activeSection, settings)
 
   return (

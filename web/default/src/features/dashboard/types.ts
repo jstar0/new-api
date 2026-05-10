@@ -16,6 +16,7 @@ export interface QuotaDataItem {
 }
 
 export interface UsageLeaderboardItem {
+  user_id?: number
   rank: number
   display_name: string
   request_count: number

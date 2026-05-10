@@ -108,9 +108,12 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
       () => loadLeaderboard(false),
       USAGE_LEADERBOARD_REFRESH_INTERVAL,
     );
+    const handleFocus = () => loadLeaderboard(false);
+    window.addEventListener('focus', handleFocus);
     return () => {
       mounted = false;
       window.clearInterval(timer);
+      window.removeEventListener('focus', handleFocus);
     };
   }, [period]);
 
@@ -119,6 +122,10 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
       USAGE_LEADERBOARD_PODIUM_ORDER.map((rank) =>
         leaderboard.find((item) => item.rank === rank),
       ).filter(Boolean),
+    [leaderboard],
+  );
+  const tableLeaderboard = useMemo(
+    () => leaderboard.filter((item) => item.rank > 3),
     [leaderboard],
   );
 
@@ -175,6 +182,9 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
               <span>{t('额度消耗排行榜')}</span>
               <Tag color='white' shape='circle'>
                 {t('每15分钟更新')}
+              </Tag>
+              <Tag color='yellow' shape='circle'>
+                {t('日榜奖励 5% / 4% / 3% / 4-10名 1%')}
               </Tag>
             </div>
             <Tabs activeKey={period} onChange={setPeriod} type='button'>
@@ -234,16 +244,18 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
             })}
           </div>
         )}
-        <Table
-          size='small'
-          columns={columns}
-          dataSource={leaderboard}
-          rowKey='rank'
-          loading={loading}
-          pagination={false}
-          empty={t('暂无排行数据')}
-          scroll={{ x: 560 }}
-        />
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+          <Table
+            size='small'
+            columns={columns}
+            dataSource={tableLeaderboard}
+            rowKey='rank'
+            loading={loading}
+            pagination={false}
+            empty={t('暂无排行数据')}
+            scroll={{ x: 560 }}
+          />
+        </div>
       </Card>
     </div>
   );

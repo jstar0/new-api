@@ -92,7 +92,7 @@ func PreWssConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, usag
 	if relayInfo.UsePrice {
 		return nil
 	}
-	userQuota, err := model.GetUserQuota(relayInfo.UserId, false)
+	userQuota, err := model.GetUserAvailableQuota(relayInfo.UserId, false)
 	if err != nil {
 		return err
 	}
@@ -405,6 +405,49 @@ func PreConsumeTokenQuota(relayInfo *relaycommon.RelayInfo, quota int) error {
 	return nil
 }
 
+func adjustWalletQuotaWithRewardSplit(relayInfo *relaycommon.RelayInfo, quota int) error {
+	if quota == 0 {
+		return nil
+	}
+	if quota > 0 {
+		rewardUsed, walletUsed, err := model.ConsumeUserRewardThenWalletQuota(relayInfo.UserId, quota)
+		if err != nil {
+			return err
+		}
+		relayInfo.RewardPreConsumedQuota += rewardUsed
+		relayInfo.WalletPreConsumedQuota += walletUsed
+		return nil
+	}
+
+	refundQuota := -quota
+	walletRefund := refundQuota
+	rewardRefund := 0
+	if relayInfo.WalletPreConsumedQuota > 0 || relayInfo.RewardPreConsumedQuota > 0 {
+		if walletRefund > relayInfo.WalletPreConsumedQuota {
+			walletRefund = relayInfo.WalletPreConsumedQuota
+		}
+		rewardRefund = refundQuota - walletRefund
+		if rewardRefund > relayInfo.RewardPreConsumedQuota {
+			rewardRefund = relayInfo.RewardPreConsumedQuota
+		}
+		if rewardRefund+walletRefund < refundQuota {
+			walletRefund += refundQuota - rewardRefund - walletRefund
+		}
+	}
+	if err := model.RefundUserRewardWalletQuota(relayInfo.UserId, rewardRefund, walletRefund); err != nil {
+		return err
+	}
+	relayInfo.WalletPreConsumedQuota -= walletRefund
+	if relayInfo.WalletPreConsumedQuota < 0 {
+		relayInfo.WalletPreConsumedQuota = 0
+	}
+	relayInfo.RewardPreConsumedQuota -= rewardRefund
+	if relayInfo.RewardPreConsumedQuota < 0 {
+		relayInfo.RewardPreConsumedQuota = 0
+	}
+	return nil
+}
+
 func PostConsumeQuota(relayInfo *relaycommon.RelayInfo, quota int, preConsumedQuota int, sendEmail bool) (err error) {
 
 	// 1) Consume from wallet quota OR subscription item
@@ -420,13 +463,7 @@ func PostConsumeQuota(relayInfo *relaycommon.RelayInfo, quota int, preConsumedQu
 			relayInfo.SubscriptionPostDelta += delta
 		}
 	} else {
-		// Wallet
-		if quota > 0 {
-			err = model.DecreaseUserQuota(relayInfo.UserId, quota, false)
-		} else {
-			err = model.IncreaseUserQuota(relayInfo.UserId, -quota, false)
-		}
-		if err != nil {
+		if err = adjustWalletQuotaWithRewardSplit(relayInfo, quota); err != nil {
 			return err
 		}
 	}

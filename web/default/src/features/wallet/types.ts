@@ -23,6 +23,7 @@ export type PaymentResponse = ApiResponse<Record<string, unknown>> & {
 export type StripePaymentResponse = ApiResponse<{ pay_link: string }>
 export type AffiliateCodeResponse = ApiResponse<string>
 export type AffiliateTransferResponse = ApiResponse
+export type UsageRewardsResponse = ApiResponse<UsageRewardRecord[]>
 export type CreemPaymentResponse = ApiResponse<{ checkout_url: string }>
 export type WaffoPaymentResponse = ApiResponse<
   { payment_url?: string } | string
@@ -201,6 +202,10 @@ export interface UserWalletData {
   username: string
   /** Current quota balance */
   quota: number
+  /** Reward quota balance, consumed before wallet quota */
+  reward_quota?: number
+  /** Total reward quota earned from usage rankings */
+  reward_history_quota?: number
   /** Total used quota */
   used_quota: number
   /** Total request count */
@@ -213,6 +218,21 @@ export interface UserWalletData {
   aff_count: number
   /** User group */
   group: string
+}
+
+/**
+ * Daily usage ranking reward record
+ */
+export interface UsageRewardRecord {
+  id: number
+  user_id: number
+  display_name: string
+  period_date: string
+  rank: number
+  reward_rate: number
+  consume_quota: number
+  reward_quota: number
+  created_at: number
 }
 
 /**

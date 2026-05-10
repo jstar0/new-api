@@ -29,6 +29,10 @@ export interface UserProfile {
   group: string
   /** Current quota balance */
   quota: number
+  /** Reward quota balance, consumed before wallet quota */
+  reward_quota?: number
+  /** Total reward quota earned from usage rankings */
+  reward_history_quota?: number
   /** Total used quota */
   used_quota: number
   /** Total request count */

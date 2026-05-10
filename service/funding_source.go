@@ -27,21 +27,16 @@ type FundingSource interface {
 // ---------------------------------------------------------------------------
 
 type WalletFunding struct {
-	userId   int
-	consumed int // 实际预扣的用户额度
+	userId         int
+	consumed       int // 实际预扣的用户额度
+	rewardConsumed int
+	walletConsumed int
 }
 
 func (w *WalletFunding) Source() string { return BillingSourceWallet }
 
 func (w *WalletFunding) PreConsume(amount int) error {
-	if amount <= 0 {
-		return nil
-	}
-	if err := model.DecreaseUserQuota(w.userId, amount, false); err != nil {
-		return err
-	}
-	w.consumed = amount
-	return nil
+	return w.consume(amount)
 }
 
 func (w *WalletFunding) Settle(delta int) error {
@@ -49,18 +44,54 @@ func (w *WalletFunding) Settle(delta int) error {
 		return nil
 	}
 	if delta > 0 {
-		return model.DecreaseUserQuota(w.userId, delta, false)
+		return w.consume(delta)
 	}
-	return model.IncreaseUserQuota(w.userId, -delta, false)
+	return w.refundAmount(-delta)
 }
 
 func (w *WalletFunding) Refund() error {
 	if w.consumed <= 0 {
 		return nil
 	}
-	// IncreaseUserQuota 是 quota += N 的非幂等操作，不能重试，否则会多退额度。
-	// 订阅的 RefundSubscriptionPreConsume 有 requestId 幂等保护所以可以重试。
-	return model.IncreaseUserQuota(w.userId, w.consumed, false)
+	return w.refundAmount(w.consumed)
+}
+
+func (w *WalletFunding) consume(amount int) error {
+	if amount <= 0 {
+		return nil
+	}
+	rewardUsed, walletUsed, err := model.ConsumeUserRewardThenWalletQuota(w.userId, amount)
+	if err != nil {
+		return err
+	}
+	w.consumed += amount
+	w.rewardConsumed += rewardUsed
+	w.walletConsumed += walletUsed
+	return nil
+}
+
+func (w *WalletFunding) refundAmount(amount int) error {
+	if amount <= 0 || w.consumed <= 0 {
+		return nil
+	}
+	if amount > w.consumed {
+		amount = w.consumed
+	}
+	walletRefund := amount
+	if walletRefund > w.walletConsumed {
+		walletRefund = w.walletConsumed
+	}
+	rewardRefund := amount - walletRefund
+	if rewardRefund > w.rewardConsumed {
+		rewardRefund = w.rewardConsumed
+	}
+	if err := model.RefundUserRewardWalletQuota(w.userId, rewardRefund, walletRefund); err != nil {
+		return err
+	}
+	w.consumed -= rewardRefund + walletRefund
+	w.rewardConsumed -= rewardRefund
+	w.walletConsumed -= walletRefund
+	return nil
 }
 
 // ---------------------------------------------------------------------------

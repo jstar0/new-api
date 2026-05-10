@@ -78,24 +78,27 @@ export function UsageLeaderboardPanel() {
     queryKey: ['dashboard', 'overview', 'usage-leaderboard', period],
     queryFn: () => getUsageLeaderboard(10, period),
     refetchInterval: USAGE_LEADERBOARD_REFRESH_INTERVAL,
-    staleTime: USAGE_LEADERBOARD_REFRESH_INTERVAL,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   })
 
   const items = usageLeaderboardQuery.data?.data ?? []
   const podiumItems = USAGE_LEADERBOARD_PODIUM_ORDER.map((rank) =>
     items.find((item) => item.rank === rank)
   ).filter((item): item is UsageLeaderboardItem => Boolean(item))
+  const tableItems = items.filter((item) => item.rank > 3)
 
   return (
     <PanelWrapper
       title={
         <span className='inline-flex items-center gap-2'>
           <Trophy className='text-primary size-4' />
-          {t('Quota Usage Leaderboard')}
+          {t('额度消耗排行榜')}
         </span>
       }
       description={t(
-        'Top users by quota consumption, refreshed every 15 minutes'
+        'Daily rewards: 5%, 4%, 3%, and 1% for ranks 4-10. Refreshed every 15 minutes'
       )}
       loading={usageLeaderboardQuery.isLoading}
       empty={!usageLeaderboardQuery.isLoading && items.length === 0}
@@ -169,45 +172,49 @@ export function UsageLeaderboardPanel() {
           })}
         </div>
       )}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className='w-16'>{t('Rank')}</TableHead>
-            <TableHead>{t('User')}</TableHead>
-            <TableHead className='text-right'>{t('Consumed Quota')}</TableHead>
-            <TableHead className='hidden text-right md:table-cell'>
-              {t('Request Count')}
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.map((item) => (
-            <TableRow key={`${item.rank}-${item.display_name}`}>
-              <TableCell>
-                <span
-                  className={cn(
-                    'inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-semibold',
-                    getRankClassName(item.rank)
-                  )}
-                >
-                  {item.rank}
-                </span>
-              </TableCell>
-              <TableCell>
-                <div className='max-w-56 truncate font-medium'>
-                  {item.display_name}
-                </div>
-              </TableCell>
-              <TableCell className='text-right font-medium tabular-nums'>
-                {formatQuota(item.consume_quota)}
-              </TableCell>
-              <TableCell className='text-muted-foreground hidden text-right tabular-nums md:table-cell'>
-                {formatNumber(item.request_count)}
-              </TableCell>
+      <div className='mx-auto w-full max-w-3xl'>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className='w-16'>{t('Rank')}</TableHead>
+              <TableHead>{t('User')}</TableHead>
+              <TableHead className='text-right'>
+                {t('Consumed Quota')}
+              </TableHead>
+              <TableHead className='hidden text-right md:table-cell'>
+                {t('Request Count')}
+              </TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {tableItems.map((item) => (
+              <TableRow key={`${item.rank}-${item.display_name}`}>
+                <TableCell>
+                  <span
+                    className={cn(
+                      'inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-semibold',
+                      getRankClassName(item.rank)
+                    )}
+                  >
+                    {item.rank}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <div className='max-w-56 truncate font-medium'>
+                    {item.display_name}
+                  </div>
+                </TableCell>
+                <TableCell className='text-right font-medium tabular-nums'>
+                  {formatQuota(item.consume_quota)}
+                </TableCell>
+                <TableCell className='text-muted-foreground hidden text-right tabular-nums md:table-cell'>
+                  {formatNumber(item.request_count)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </PanelWrapper>
   )
 }

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -14,6 +15,7 @@ const (
 
 type UsageLeaderboardItem struct {
 	Rank              int    `json:"rank"`
+	UserId            int    `json:"user_id,omitempty"`
 	DisplayName       string `json:"display_name"`
 	RequestCount      int64  `json:"request_count"`
 	ConsumeTokens     int64  `json:"consume_tokens"`
@@ -40,16 +42,28 @@ func GetUsageLeaderboard(limit int, period string) ([]UsageLeaderboardItem, erro
 }
 
 func getUsageLeaderboard(limit int, period string, now time.Time) ([]UsageLeaderboardItem, error) {
+	since := usageLeaderboardStartTime(period, now)
+	return getUsageLeaderboardInRange(limit, since, 0)
+}
+
+func getUsageLeaderboardBetween(limit int, start int64, end int64) ([]UsageLeaderboardItem, error) {
+	return getUsageLeaderboardInRange(limit, start, end)
+}
+
+func getUsageLeaderboardInRange(limit int, start int64, end int64) ([]UsageLeaderboardItem, error) {
 	if limit <= 0 || limit > 50 {
 		limit = 10
 	}
 
-	since := usageLeaderboardStartTime(period, now)
 	whereCreatedAt := ""
 	args := []any{LogTypeConsume}
-	if since > 0 {
+	if start > 0 {
 		whereCreatedAt = "\n\tAND created_at >= ?"
-		args = append(args, since)
+		args = append(args, start)
+	}
+	if end > 0 {
+		whereCreatedAt += "\n\tAND created_at < ?"
+		args = append(args, end)
 	}
 	args = append(args, limit)
 
@@ -102,10 +116,14 @@ LIMIT ?`,
 		if userName, ok := nameByUserId[row.UserId]; ok && userName != "" {
 			displayName = userName
 		}
+		if displayName == "" {
+			displayName = fmt.Sprintf("User #%d", row.UserId)
+		}
 
 		items = append(items, UsageLeaderboardItem{
 			Rank:              i + 1,
-			DisplayName:       maskAffLeaderboardName(displayName, row.UserId),
+			UserId:            row.UserId,
+			DisplayName:       displayName,
 			RequestCount:      row.RequestCount,
 			ConsumeTokens:     row.ConsumeTokens,
 			ConsumeQuota:      row.ConsumeQuota,

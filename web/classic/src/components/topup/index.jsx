@@ -95,6 +95,8 @@ const TopUp = () => {
 
   // 账单Modal状态
   const [openHistory, setOpenHistory] = useState(false);
+  const [usageRewards, setUsageRewards] = useState([]);
+  const [usageRewardsLoading, setUsageRewardsLoading] = useState(false);
 
   // 订阅相关
   const [subscriptionPlans, setSubscriptionPlans] = useState([]);
@@ -553,6 +555,22 @@ const TopUp = () => {
     }
   };
 
+  const getUsageRewards = async () => {
+    setUsageRewardsLoading(true);
+    try {
+      const res = await API.get('/api/user/usage/rewards?limit=10', {
+        skipErrorHandler: true,
+      });
+      if (res.data?.success) {
+        setUsageRewards(res.data.data || []);
+      }
+    } catch (e) {
+      setUsageRewards([]);
+    } finally {
+      setUsageRewardsLoading(false);
+    }
+  };
+
   const updateBillingPreference = async (pref) => {
     const previousPref = billingPreference;
     setBillingPreference(pref);
@@ -651,7 +669,7 @@ const TopUp = () => {
                 ? data.waffo_min_topup
                 : enableWaffoPancakeTopUp
                   ? data.waffo_pancake_min_topup
-                : 1;
+                  : 1;
           setEnableOnlineTopUp(enableOnlineTopUp);
           setEnableStripeTopUp(enableStripeTopUp);
           setEnableCreemTopUp(enableCreemTopUp);
@@ -762,6 +780,7 @@ const TopUp = () => {
     getTopupInfo().then();
     getSubscriptionPlans().then();
     getSubscriptionSelf().then();
+    getUsageRewards().then();
   }, []);
 
   useEffect(() => {
@@ -985,6 +1004,8 @@ const TopUp = () => {
           statusLoading={statusLoading}
           topupInfo={topupInfo}
           onOpenHistory={handleOpenHistory}
+          usageRewards={usageRewards}
+          usageRewardsLoading={usageRewardsLoading}
           subscriptionLoading={subscriptionLoading}
           subscriptionPlans={subscriptionPlans}
           billingPreference={billingPreference}

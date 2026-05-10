@@ -89,10 +89,50 @@ func taskAdjustFunding(task *model.Task, delta int) error {
 	if taskIsSubscription(task) {
 		return model.PostConsumeUserSubscriptionDelta(task.PrivateData.SubscriptionId, int64(delta))
 	}
-	if delta > 0 {
-		return model.DecreaseUserQuota(task.UserId, delta, false)
+	return taskAdjustWalletFunding(task, delta)
+}
+
+func taskAdjustWalletFunding(task *model.Task, delta int) error {
+	if delta == 0 {
+		return nil
 	}
-	return model.IncreaseUserQuota(task.UserId, -delta, false)
+	if delta > 0 {
+		rewardUsed, walletUsed, err := model.ConsumeUserRewardThenWalletQuota(task.UserId, delta)
+		if err != nil {
+			return err
+		}
+		task.PrivateData.RewardPreConsumedQuota += rewardUsed
+		task.PrivateData.WalletPreConsumedQuota += walletUsed
+		return nil
+	}
+
+	refundQuota := -delta
+	walletRefund := refundQuota
+	rewardRefund := 0
+	if task.PrivateData.WalletPreConsumedQuota > 0 || task.PrivateData.RewardPreConsumedQuota > 0 {
+		if walletRefund > task.PrivateData.WalletPreConsumedQuota {
+			walletRefund = task.PrivateData.WalletPreConsumedQuota
+		}
+		rewardRefund = refundQuota - walletRefund
+		if rewardRefund > task.PrivateData.RewardPreConsumedQuota {
+			rewardRefund = task.PrivateData.RewardPreConsumedQuota
+		}
+		if rewardRefund+walletRefund < refundQuota {
+			walletRefund += refundQuota - rewardRefund - walletRefund
+		}
+	}
+	if err := model.RefundUserRewardWalletQuota(task.UserId, rewardRefund, walletRefund); err != nil {
+		return err
+	}
+	task.PrivateData.WalletPreConsumedQuota -= walletRefund
+	if task.PrivateData.WalletPreConsumedQuota < 0 {
+		task.PrivateData.WalletPreConsumedQuota = 0
+	}
+	task.PrivateData.RewardPreConsumedQuota -= rewardRefund
+	if task.PrivateData.RewardPreConsumedQuota < 0 {
+		task.PrivateData.RewardPreConsumedQuota = 0
+	}
+	return nil
 }
 
 // taskAdjustTokenQuota 调整任务的令牌额度，delta > 0 表示扣费，delta < 0 表示退还。
@@ -215,6 +255,23 @@ func RecalculateTaskQuota(ctx context.Context, task *model.Task, actualQuota int
 	taskAdjustTokenQuota(ctx, task, quotaDelta)
 
 	task.Quota = actualQuota
+	updateQuery := model.DB.Model(&model.Task{}).Select("quota", "private_data")
+	shouldPersist := true
+	if task.ID > 0 {
+		updateQuery = updateQuery.Where("id = ?", task.ID)
+	} else if task.TaskID != "" {
+		updateQuery = updateQuery.Where("task_id = ?", task.TaskID)
+	} else {
+		shouldPersist = false
+	}
+	if shouldPersist {
+		if err := updateQuery.Updates(&model.Task{
+			Quota:       task.Quota,
+			PrivateData: task.PrivateData,
+		}).Error; err != nil {
+			logger.LogWarn(ctx, fmt.Sprintf("更新任务计费快照失败 task %s: %s", task.TaskID, err.Error()))
+		}
+	}
 
 	var logType int
 	var logQuota int
