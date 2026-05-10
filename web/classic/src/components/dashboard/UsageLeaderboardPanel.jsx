@@ -70,6 +70,21 @@ const getPodiumMeta = (rank) => {
 
 const formatInteger = (value) => Number(value || 0).toLocaleString();
 
+const getLeaderboardItemKey = (item) => {
+  if (item?.user_id) {
+    return `user:${item.user_id}`;
+  }
+  return `rank:${item?.rank}:${item?.display_name || ''}`;
+};
+
+const getUsageRewardRateText = (rank) => {
+  if (rank === 1) return '5%';
+  if (rank === 2) return '4%';
+  if (rank === 3) return '3%';
+  if (rank >= 4 && rank <= 10) return '1%';
+  return '-';
+};
+
 const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -125,8 +140,13 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
     [leaderboard],
   );
   const tableLeaderboard = useMemo(
-    () => leaderboard.filter((item) => item.rank > 3),
-    [leaderboard],
+    () => {
+      const podiumKeys = new Set(podiumItems.map(getLeaderboardItemKey));
+      return leaderboard.filter(
+        (item) => item.rank > 3 && !podiumKeys.has(getLeaderboardItemKey(item)),
+      );
+    },
+    [leaderboard, podiumItems],
   );
 
   const columns = useMemo(
@@ -161,6 +181,16 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
         ),
       },
       {
+        title: t('日榜奖励'),
+        dataIndex: 'rank',
+        width: 96,
+        render: (rank) => (
+          <Tag color='green' size='small'>
+            {getUsageRewardRateText(rank)}
+          </Tag>
+        ),
+      },
+      {
         title: t('请求数'),
         dataIndex: 'request_count',
         width: 92,
@@ -184,7 +214,7 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
                 {t('每15分钟更新')}
               </Tag>
               <Tag color='yellow' shape='circle'>
-                {t('日榜奖励 5% / 4% / 3% / 4-10名 1%')}
+                {t('日榜奖励：1名5% · 2名4% · 3名3% · 4-10名1%')}
               </Tag>
             </div>
             <Tabs activeKey={period} onChange={setPeriod} type='button'>
@@ -199,6 +229,11 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
           </div>
         }
       >
+        <div className='mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900'>
+          {t(
+            '奖励机制：每日 00:00 按日榜结算，第1名5%、第2名4%、第3名3%、第4-10名1%，奖励发放到奖励额度并优先抵扣。',
+          )}
+        </div>
         {podiumItems.length > 0 && (
           <div className='mb-4 grid grid-cols-1 gap-3 md:grid-cols-3 md:items-end'>
             {podiumItems.map((item) => {
@@ -229,6 +264,9 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
                   </Text>
                   <Tag color={meta.tagColor} size='small' className='mt-2'>
                     {t(meta.title)}
+                  </Tag>
+                  <Tag color='green' size='small' className='mt-2'>
+                    {t('日榜奖励')} {getUsageRewardRateText(item.rank)}
                   </Tag>
                   <Text type='tertiary' size='small' className='mt-2'>
                     {t(meta.note)}

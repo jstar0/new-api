@@ -76,6 +76,7 @@ func TestGetUsageLeaderboardRanksByConsumedQuota(t *testing.T) {
 	require.Len(t, leaderboard, 2)
 
 	assert.Equal(t, 1, leaderboard[0].Rank)
+	assert.Equal(t, "alice", leaderboard[0].DisplayName)
 	assert.EqualValues(t, 2, leaderboard[0].RequestCount)
 	assert.EqualValues(t, 2000, leaderboard[0].ConsumeTokens)
 	assert.EqualValues(t, 150, leaderboard[0].ConsumeQuota)

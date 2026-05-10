@@ -71,6 +71,20 @@ function getPodiumMeta(rank: number) {
   }
 }
 
+function getLeaderboardItemKey(item: UsageLeaderboardItem): string {
+  return item.user_id != null && item.user_id > 0
+    ? `user:${item.user_id}`
+    : `rank:${item.rank}:${item.display_name}`
+}
+
+function getUsageRewardRateText(rank: number): string {
+  if (rank === 1) return '5%'
+  if (rank === 2) return '4%'
+  if (rank === 3) return '3%'
+  if (rank >= 4 && rank <= 10) return '1%'
+  return '-'
+}
+
 export function UsageLeaderboardPanel() {
   const { t } = useTranslation()
   const [period, setPeriod] = useState<UsageLeaderboardPeriod>('day')
@@ -87,7 +101,10 @@ export function UsageLeaderboardPanel() {
   const podiumItems = USAGE_LEADERBOARD_PODIUM_ORDER.map((rank) =>
     items.find((item) => item.rank === rank)
   ).filter((item): item is UsageLeaderboardItem => Boolean(item))
-  const tableItems = items.filter((item) => item.rank > 3)
+  const podiumItemKeys = new Set(podiumItems.map(getLeaderboardItemKey))
+  const tableItems = items.filter(
+    (item) => item.rank > 3 && !podiumItemKeys.has(getLeaderboardItemKey(item))
+  )
 
   return (
     <PanelWrapper
@@ -98,7 +115,7 @@ export function UsageLeaderboardPanel() {
         </span>
       }
       description={t(
-        'Daily rewards: 5%, 4%, 3%, and 1% for ranks 4-10. Refreshed every 15 minutes'
+        '奖励机制：每日 00:00 按日榜结算，第1名5%、第2名4%、第3名3%、第4-10名1%，发放到奖励额度并优先抵扣'
       )}
       loading={usageLeaderboardQuery.isLoading}
       empty={!usageLeaderboardQuery.isLoading && items.length === 0}
@@ -153,6 +170,9 @@ export function UsageLeaderboardPanel() {
                 >
                   {t(meta.title)}
                 </div>
+                <div className='mt-1 rounded-full bg-background/80 px-2 py-0.5 text-xs font-medium'>
+                  {t('日榜奖励')} {getUsageRewardRateText(item.rank)}
+                </div>
                 <div className='text-muted-foreground mt-1 text-xs'>
                   {t(meta.note)}
                 </div>
@@ -181,6 +201,7 @@ export function UsageLeaderboardPanel() {
               <TableHead className='text-right'>
                 {t('Consumed Quota')}
               </TableHead>
+              <TableHead className='text-right'>{t('日榜奖励')}</TableHead>
               <TableHead className='hidden text-right md:table-cell'>
                 {t('Request Count')}
               </TableHead>
@@ -206,6 +227,9 @@ export function UsageLeaderboardPanel() {
                 </TableCell>
                 <TableCell className='text-right font-medium tabular-nums'>
                   {formatQuota(item.consume_quota)}
+                </TableCell>
+                <TableCell className='text-right font-medium'>
+                  {getUsageRewardRateText(item.rank)}
                 </TableCell>
                 <TableCell className='text-muted-foreground hidden text-right tabular-nums md:table-cell'>
                   {formatNumber(item.request_count)}

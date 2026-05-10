@@ -99,7 +99,7 @@ LIMIT ?`,
 	if len(userIds) > 0 {
 		userNames := make([]usageLeaderboardUserName, 0, len(userIds))
 		err = DB.Model(&User{}).
-			Select("id, COALESCE(NULLIF(display_name, ''), username) AS display_name").
+			Select("id, COALESCE(NULLIF(username, ''), display_name) AS display_name").
 			Where("id IN ? AND deleted_at IS NULL", userIds).
 			Scan(&userNames).Error
 		if err != nil {
