@@ -33,6 +33,7 @@ import {
   CreditCard,
   Server,
   Activity,
+  Trophy,
 } from 'lucide-react';
 
 import SystemSetting from '../../components/settings/SystemSetting';
@@ -47,6 +48,7 @@ import DrawingSetting from '../../components/settings/DrawingSetting';
 import PaymentSetting from '../../components/settings/PaymentSetting';
 import ModelDeploymentSetting from '../../components/settings/ModelDeploymentSetting';
 import PerformanceSetting from '../../components/settings/PerformanceSetting';
+import UsageRewardSetting from '../../components/settings/UsageRewardSetting';
 
 const Setting = () => {
   const { t } = useTranslation();
@@ -95,6 +97,16 @@ const Setting = () => {
       ),
       content: <PaymentSetting />,
       itemKey: 'payment',
+    });
+    panes.push({
+      tab: (
+        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <Trophy size={18} />
+          {t('排行榜奖励')}
+        </span>
+      ),
+      content: <UsageRewardSetting />,
+      itemKey: 'usage-reward',
     });
     panes.push({
       tab: (

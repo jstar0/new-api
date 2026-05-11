@@ -27,6 +27,22 @@ export interface UsageLeaderboardItem {
 
 export type UsageLeaderboardPeriod = 'day' | 'week' | 'month'
 
+export type UsageRewardType = 'percent' | 'fixed_quota'
+
+export interface UsageRewardRule {
+  from_rank: number
+  to_rank: number
+  reward_type: UsageRewardType
+  reward_rate: number
+  fixed_quota: number
+}
+
+export interface UsageRewardSettings {
+  enabled: boolean
+  rank_limit: number
+  rules: UsageRewardRule[]
+}
+
 // ============================================================================
 // Uptime Monitoring Types
 // ============================================================================

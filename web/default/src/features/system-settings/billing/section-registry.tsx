@@ -6,6 +6,7 @@ import { PaymentSettingsSection } from '../integrations/payment-settings-section
 import { RatioSettingsCard } from '../models/ratio-settings-card'
 import type { BillingSettings } from '../types'
 import { createSectionRegistry } from '../utils/section-registry'
+import { UsageRewardSettingsSection } from './usage-reward-settings-section'
 
 const getModelDefaults = (settings: BillingSettings) => ({
   ModelPrice: settings.ModelPrice,
@@ -53,6 +54,16 @@ const BILLING_SECTIONS = [
               settings['quota_setting.enable_free_model_pre_consume'],
           },
         }}
+      />
+    ),
+  },
+  {
+    id: 'usage-reward',
+    titleKey: '排行榜奖励',
+    descriptionKey: '配置额度消耗榜的日榜奖励规则',
+    build: (settings: BillingSettings) => (
+      <UsageRewardSettingsSection
+        defaultValue={settings['usage_reward_setting.config']}
       />
     ),
   },

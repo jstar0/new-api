@@ -30,6 +30,40 @@ const USAGE_LEADERBOARD_PERIODS = [
   { value: 'month', label: '月榜' },
 ];
 const USAGE_LEADERBOARD_PODIUM_ORDER = [2, 1, 3];
+const DEFAULT_USAGE_REWARD_SETTINGS = {
+  enabled: true,
+  rank_limit: 10,
+  rules: [
+    {
+      from_rank: 1,
+      to_rank: 1,
+      reward_type: 'percent',
+      reward_rate: 500,
+      fixed_quota: 0,
+    },
+    {
+      from_rank: 2,
+      to_rank: 2,
+      reward_type: 'percent',
+      reward_rate: 400,
+      fixed_quota: 0,
+    },
+    {
+      from_rank: 3,
+      to_rank: 3,
+      reward_type: 'percent',
+      reward_rate: 300,
+      fixed_quota: 0,
+    },
+    {
+      from_rank: 4,
+      to_rank: 10,
+      reward_type: 'percent',
+      reward_rate: 100,
+      fixed_quota: 0,
+    },
+  ],
+};
 
 const getPodiumMeta = (rank) => {
   if (rank === 1) {
@@ -77,16 +111,83 @@ const getLeaderboardItemKey = (item) => {
   return `rank:${item?.rank}:${item?.display_name || ''}`;
 };
 
-const getUsageRewardRateText = (rank) => {
-  if (rank === 1) return '5%';
-  if (rank === 2) return '4%';
-  if (rank === 3) return '3%';
-  if (rank >= 4 && rank <= 10) return '1%';
-  return '-';
+const normalizeUsageRewardSettings = (settings) => ({
+  ...DEFAULT_USAGE_REWARD_SETTINGS,
+  ...(settings || {}),
+  rank_limit: Math.max(
+    1,
+    Math.min(
+      50,
+      Number(settings?.rank_limit || DEFAULT_USAGE_REWARD_SETTINGS.rank_limit),
+    ),
+  ),
+  rules: Array.isArray(settings?.rules)
+    ? settings.rules.map((rule) => ({
+        from_rank: Number(rule.from_rank || 1),
+        to_rank: Number(rule.to_rank || 1),
+        reward_type:
+          rule.reward_type === 'fixed'
+            ? 'fixed_quota'
+            : rule.reward_type || 'percent',
+        reward_rate: Number(rule.reward_rate || 0),
+        fixed_quota: Number(rule.fixed_quota || 0),
+      }))
+    : DEFAULT_USAGE_REWARD_SETTINGS.rules,
+});
+
+const getUsageRewardRule = (rank, settings) =>
+  settings.rules.find((rule) => rank >= rule.from_rank && rank <= rule.to_rank);
+
+const formatRuleRank = (rule) => {
+  if (rule.from_rank === rule.to_rank) {
+    return `第${rule.from_rank}名`;
+  }
+  return `第${rule.from_rank}-${rule.to_rank}名`;
+};
+
+const formatUsageReward = (rule) => {
+  if (!rule) {
+    return '-';
+  }
+  if (rule.reward_type === 'fixed_quota') {
+    return renderQuota(rule.fixed_quota || 0);
+  }
+  return `${(Number(rule.reward_rate || 0) / 100).toFixed(2).replace(/\.?0+$/, '')}%`;
+};
+
+const getUsageRewardText = (rank, period, settings) => {
+  if (period !== 'day' || !settings.enabled) {
+    return '-';
+  }
+  return formatUsageReward(getUsageRewardRule(rank, settings));
+};
+
+const getUsageRewardSummary = (settings) => {
+  if (!settings.enabled) {
+    return '日榜奖励已关闭';
+  }
+  if (!settings.rules.length) {
+    return '暂无奖励规则';
+  }
+  return `日榜奖励：${settings.rules
+    .map((rule) => `${formatRuleRank(rule)} ${formatUsageReward(rule)}`)
+    .join(' · ')}`;
+};
+
+const getUsageRewardDescription = (settings) => {
+  if (!settings.enabled) {
+    return '奖励机制：当前已关闭，排行榜仅展示额度消耗情况。';
+  }
+  return `奖励机制：每日 00:00 按日榜结算，${settings.rules
+    .map((rule) => `${formatRuleRank(rule)} ${formatUsageReward(rule)}`)
+    .join('，')}，奖励发放到奖励额度并优先抵扣。`;
 };
 
 const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
   const [leaderboard, setLeaderboard] = useState([]);
+  const [rewardSettings, setRewardSettings] = useState(
+    DEFAULT_USAGE_REWARD_SETTINGS,
+  );
   const [loading, setLoading] = useState(false);
   const [period, setPeriod] = useState('day');
 
@@ -98,8 +199,26 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
         setLoading(true);
       }
       try {
+        let nextSettings = DEFAULT_USAGE_REWARD_SETTINGS;
+        try {
+          const settingRes = await API.get('/api/user/usage/reward-setting', {
+            skipErrorHandler: true,
+          });
+          if (settingRes?.data?.success) {
+            nextSettings = normalizeUsageRewardSettings(settingRes.data.data);
+            if (mounted) {
+              setRewardSettings(nextSettings);
+            }
+          }
+        } catch (error) {
+          nextSettings = DEFAULT_USAGE_REWARD_SETTINGS;
+        }
+        const limit = Math.max(
+          3,
+          Math.min(50, Number(nextSettings.rank_limit || 10)),
+        );
         const res = await API.get(
-          `/api/user/usage/leaderboard?limit=10&period=${period}`,
+          `/api/user/usage/leaderboard?limit=${limit}&period=${period}`,
           {
             skipErrorHandler: true,
           },
@@ -139,15 +258,12 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
       ).filter(Boolean),
     [leaderboard],
   );
-  const tableLeaderboard = useMemo(
-    () => {
-      const podiumKeys = new Set(podiumItems.map(getLeaderboardItemKey));
-      return leaderboard.filter(
-        (item) => item.rank > 3 && !podiumKeys.has(getLeaderboardItemKey(item)),
-      );
-    },
-    [leaderboard, podiumItems],
-  );
+  const tableLeaderboard = useMemo(() => {
+    const podiumKeys = new Set(podiumItems.map(getLeaderboardItemKey));
+    return leaderboard.filter(
+      (item) => item.rank > 3 && !podiumKeys.has(getLeaderboardItemKey(item)),
+    );
+  }, [leaderboard, podiumItems]);
 
   const columns = useMemo(
     () => [
@@ -186,7 +302,7 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
         width: 96,
         render: (rank) => (
           <Tag color='green' size='small'>
-            {getUsageRewardRateText(rank)}
+            {getUsageRewardText(rank, period, rewardSettings)}
           </Tag>
         ),
       },
@@ -197,7 +313,7 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
         render: (count) => formatInteger(count),
       },
     ],
-    [t],
+    [period, rewardSettings, t],
   );
 
   return (
@@ -214,7 +330,7 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
                 {t('每15分钟更新')}
               </Tag>
               <Tag color='yellow' shape='circle'>
-                {t('日榜奖励：1名5% · 2名4% · 3名3% · 4-10名1%')}
+                {t(getUsageRewardSummary(rewardSettings))}
               </Tag>
             </div>
             <Tabs activeKey={period} onChange={setPeriod} type='button'>
@@ -230,9 +346,7 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
         }
       >
         <div className='mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900'>
-          {t(
-            '奖励机制：每日 00:00 按日榜结算，第1名5%、第2名4%、第3名3%、第4-10名1%，奖励发放到奖励额度并优先抵扣。',
-          )}
+          {t(getUsageRewardDescription(rewardSettings))}
         </div>
         {podiumItems.length > 0 && (
           <div className='mb-4 grid grid-cols-1 gap-3 md:grid-cols-3 md:items-end'>
@@ -266,7 +380,8 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
                     {t(meta.title)}
                   </Tag>
                   <Tag color='green' size='small' className='mt-2'>
-                    {t('日榜奖励')} {getUsageRewardRateText(item.rank)}
+                    {t('日榜奖励')}{' '}
+                    {getUsageRewardText(item.rank, period, rewardSettings)}
                   </Tag>
                   <Text type='tertiary' size='small' className='mt-2'>
                     {t(meta.note)}

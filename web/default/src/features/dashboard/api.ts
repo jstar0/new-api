@@ -4,6 +4,7 @@ import type {
   UptimeGroupResult,
   UsageLeaderboardItem,
   UsageLeaderboardPeriod,
+  UsageRewardSettings,
 } from './types'
 
 // ============================================================================
@@ -58,6 +59,14 @@ export async function getUsageLeaderboard(
   }>('/api/user/usage/leaderboard', {
     params: { limit, period },
   })
+  return res.data
+}
+
+export async function getUsageRewardSetting() {
+  const res = await api.get<{
+    success: boolean
+    data: UsageRewardSettings
+  }>('/api/user/usage/reward-setting')
   return res.data
 }
 

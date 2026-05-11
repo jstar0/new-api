@@ -11,7 +11,7 @@ func Cache() func(c *gin.Context) {
 		} else {
 			c.Header("Cache-Control", "max-age=604800") // one week
 		}
-		c.Header("Cache-Version", "b3cc6c3-usage-reward-visible-20260510")
+		c.Header("Cache-Version", "usage-reward-admin-20260511")
 		c.Next()
 	}
 }

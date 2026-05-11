@@ -437,6 +437,10 @@ func GetUsageLeaderboard(c *gin.Context) {
 	common.ApiSuccess(c, leaderboard)
 }
 
+func GetUsageRewardSetting(c *gin.Context) {
+	common.ApiSuccess(c, model.GetUsageRewardSettings())
+}
+
 func GetUsageRewards(c *gin.Context) {
 	limit := 20
 	if rawLimit := c.Query("limit"); rawLimit != "" {

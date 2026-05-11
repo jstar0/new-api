@@ -88,6 +88,8 @@ const defaultBillingSettings: BillingSettings = {
   'checkin_setting.enabled': false,
   'checkin_setting.min_quota': 1000,
   'checkin_setting.max_quota': 10000,
+  'usage_reward_setting.config':
+    '{"enabled":true,"rank_limit":10,"rules":[{"from_rank":1,"to_rank":1,"reward_type":"percent","reward_rate":500,"fixed_quota":0},{"from_rank":2,"to_rank":2,"reward_type":"percent","reward_rate":400,"fixed_quota":0},{"from_rank":3,"to_rank":3,"reward_type":"percent","reward_rate":300,"fixed_quota":0},{"from_rank":4,"to_rank":10,"reward_type":"percent","reward_rate":100,"fixed_quota":0}]}',
 }
 
 export function BillingSettings() {
