@@ -1,0 +1,104 @@
+name: Build TurboAPI image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      version_suffix:
+        description: Optional suffix appended to the generated image version.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: turboapi-image-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build linux/amd64 image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Resolve image metadata
+        id: meta
+        shell: bash
+        env:
+          VERSION_SUFFIX: ${{ inputs.version_suffix || '' }}
+        run: |
+          set -euo pipefail
+          short_sha="$(git rev-parse --short=7 HEAD)"
+          suffix="${VERSION_SUFFIX}"
+          version="turbo-main-${short_sha}"
+          if [ -n "$suffix" ]; then
+            safe_suffix="$(printf '%s' "$suffix" | tr -c 'A-Za-z0-9_.-' '-')"
+            version="${version}-${safe_suffix}"
+          fi
+          repository="${GITHUB_REPOSITORY,,}"
+          image="ghcr.io/${repository}"
+          echo "$version" > VERSION
+          {
+            echo "version=${version}"
+            echo "image=${image}"
+            echo "short_sha=${short_sha}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract labels
+        id: labels
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.meta.outputs.image }}
+          labels: |
+            org.opencontainers.image.title=new-api
+            org.opencontainers.image.description=TurboAPI managed NewAPI image
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.meta.outputs.version }}
+
+      - name: Build and push image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}
+            ${{ steps.meta.outputs.image }}:${{ github.sha }}
+          labels: ${{ steps.labels.outputs.labels }}
+          cache-from: type=gha,scope=turboapi-amd64
+          cache-to: type=gha,mode=max,scope=turboapi-amd64
+          provenance: false
+          sbom: false
+
+      - name: Write build summary
+        shell: bash
+        run: |
+          {
+            echo "### TurboAPI image"
+            echo
+            echo "- Image: \`${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}\`"
+            echo "- Digest: \`${{ steps.build.outputs.digest }}\`"
+            echo "- Pull by digest: \`${{ steps.meta.outputs.image }}@${{ steps.build.outputs.digest }}\`"
+            echo "- Commit: \`${{ github.sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
