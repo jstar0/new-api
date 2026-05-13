@@ -85,7 +85,7 @@ function getPodiumMeta(rank: number) {
       title: 'Quota Champion',
       note: 'Highest quota usage this period',
       className:
-        'border-amber-200 bg-amber-50/80 dark:border-amber-500/30 dark:bg-amber-950/35 md:min-h-44',
+        'border-amber-500/35 bg-card text-card-foreground ring-1 ring-amber-500/10 md:min-h-44',
       badgeClassName: 'bg-amber-500 text-white shadow-amber-500/25',
       valueClassName: 'text-amber-700 dark:text-amber-300',
     }
@@ -95,7 +95,7 @@ function getPodiumMeta(rank: number) {
       title: 'Power Contributor',
       note: 'Steady high-value usage',
       className:
-        'border-slate-200 bg-slate-50/80 dark:border-slate-500/30 dark:bg-slate-950/35 md:min-h-36',
+        'border-slate-500/35 bg-card text-card-foreground ring-1 ring-slate-500/10 md:min-h-36',
       badgeClassName: 'bg-slate-500 text-white shadow-slate-500/20',
       valueClassName: 'text-slate-700 dark:text-slate-300',
     }
@@ -104,7 +104,7 @@ function getPodiumMeta(rank: number) {
     title: 'Rising Spender',
     note: 'Still climbing this period',
     className:
-      'border-orange-200 bg-orange-50/80 dark:border-orange-500/30 dark:bg-orange-950/35 md:min-h-36',
+      'border-orange-500/35 bg-card text-card-foreground ring-1 ring-orange-500/10 md:min-h-36',
     badgeClassName: 'bg-orange-500 text-white shadow-orange-500/20',
     valueClassName: 'text-orange-700 dark:text-orange-300',
   }
@@ -276,7 +276,7 @@ export function UsageLeaderboardPanel() {
                 >
                   #{item.rank}
                 </div>
-                <div className='max-w-40 truncate text-sm font-semibold'>
+                <div className='text-card-foreground max-w-40 truncate text-sm font-semibold'>
                   {item.display_name}
                 </div>
                 <div
@@ -287,7 +287,7 @@ export function UsageLeaderboardPanel() {
                 >
                   {t(meta.title)}
                 </div>
-                <div className='bg-background/80 dark:bg-card/80 border-border/50 mt-1 rounded-full border px-2 py-0.5 text-xs font-medium'>
+                <div className='bg-muted text-foreground border-border/70 mt-1 rounded-full border px-2 py-0.5 text-xs font-medium'>
                   {t('日榜奖励')}{' '}
                   {getUsageRewardText(item.rank, period, rewardSettings)}
                 </div>
