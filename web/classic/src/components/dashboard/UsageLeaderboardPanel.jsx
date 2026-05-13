@@ -71,9 +71,9 @@ const getPodiumMeta = (rank) => {
       title: '额度王者',
       note: '本期额度消耗最高',
       tagColor: 'yellow',
-      borderColor: '#f6c453',
-      background: 'linear-gradient(180deg, #fff7d6 0%, #ffffff 100%)',
+      cardClassName: 'usage-leaderboard-podium-card-rank-1',
       badgeBackground: '#f59e0b',
+      valueClassName: 'usage-leaderboard-podium-value-rank-1',
       minHeight: 176,
       marginTop: 0,
     };
@@ -83,9 +83,9 @@ const getPodiumMeta = (rank) => {
       title: '稳定高手',
       note: '稳定调用，持续上榜',
       tagColor: 'grey',
-      borderColor: '#cbd5e1',
-      background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
+      cardClassName: 'usage-leaderboard-podium-card-rank-2',
       badgeBackground: '#64748b',
+      valueClassName: 'usage-leaderboard-podium-value-rank-2',
       minHeight: 148,
       marginTop: 24,
     };
@@ -94,9 +94,9 @@ const getPodiumMeta = (rank) => {
     title: '冲榜新星',
     note: '保持节奏，继续冲榜',
     tagColor: 'orange',
-    borderColor: '#fdba74',
-    background: 'linear-gradient(180deg, #fff7ed 0%, #ffffff 100%)',
+    cardClassName: 'usage-leaderboard-podium-card-rank-3',
     badgeBackground: '#f97316',
+    valueClassName: 'usage-leaderboard-podium-value-rank-3',
     minHeight: 148,
     marginTop: 24,
   };
@@ -345,7 +345,7 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
           </div>
         }
       >
-        <div className='mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900'>
+        <div className='usage-leaderboard-reward-notice mb-4 rounded-xl border px-4 py-3 text-sm'>
           {t(getUsageRewardDescription(rewardSettings))}
         </div>
         {podiumItems.length > 0 && (
@@ -355,12 +355,10 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
               return (
                 <div
                   key={`podium-${item.rank}-${item.display_name}`}
-                  className='flex flex-col items-center rounded-xl border px-4 py-4 text-center shadow-sm'
+                  className={`usage-leaderboard-podium-card flex flex-col items-center rounded-xl border px-4 py-4 text-center shadow-sm ${meta.cardClassName}`}
                   style={{
                     minHeight: meta.minHeight,
                     marginTop: meta.marginTop,
-                    borderColor: meta.borderColor,
-                    background: meta.background,
                   }}
                 >
                   <div
@@ -372,6 +370,7 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
                   <Text
                     strong
                     ellipsis={{ showTooltip: true }}
+                    className='usage-leaderboard-podium-user'
                     style={{ maxWidth: 160 }}
                   >
                     {item.display_name}
@@ -383,13 +382,23 @@ const UsageLeaderboardPanel = ({ CARD_PROPS, t }) => {
                     {t('日榜奖励')}{' '}
                     {getUsageRewardText(item.rank, period, rewardSettings)}
                   </Tag>
-                  <Text type='tertiary' size='small' className='mt-2'>
+                  <Text
+                    type='tertiary'
+                    size='small'
+                    className='usage-leaderboard-podium-note mt-2'
+                  >
                     {t(meta.note)}
                   </Text>
-                  <div className='mt-3 text-xl font-semibold tabular-nums'>
+                  <div
+                    className={`usage-leaderboard-podium-value mt-3 text-xl font-semibold tabular-nums ${meta.valueClassName}`}
+                  >
                     {renderQuota(item.consume_quota || 0)}
                   </div>
-                  <Text type='tertiary' size='small'>
+                  <Text
+                    type='tertiary'
+                    size='small'
+                    className='usage-leaderboard-podium-note'
+                  >
                     {t('消耗额度')}
                   </Text>
                 </div>

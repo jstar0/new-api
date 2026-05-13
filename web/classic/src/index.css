@@ -367,7 +367,9 @@ code {
   line-height: 1;
   background-color: var(--semi-color-fill-0);
   color: var(--semi-color-text-2);
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .sbg-badge-active {
@@ -885,7 +887,8 @@ html.dark .with-pastel-balls::before {
     max-width: 80px;
   }
 
-  .semi-input-prefix-text, .semi-input-suffix-text {
+  .semi-input-prefix-text,
+  .semi-input-suffix-text {
     margin: 0;
   }
 
@@ -983,6 +986,104 @@ html.dark .with-pastel-balls::before {
   gap: 0.25rem;
 }
 
+/* ==================== Dashboard usage leaderboard contrast ==================== */
+.usage-leaderboard-reward-notice {
+  border-color: #fde68a;
+  background-color: #fffbeb;
+  color: #78350f;
+}
+
+html.dark .usage-leaderboard-reward-notice {
+  border-color: rgb(245 158 11 / 0.3);
+  background-color: rgb(245 158 11 / 0.1);
+  color: #fde68a;
+}
+
+.usage-leaderboard-podium-card {
+  color: #0f172a;
+}
+
+.usage-leaderboard-podium-card-rank-1 {
+  border-color: #f6c453;
+  background: linear-gradient(180deg, #fff7d6 0%, #ffffff 100%);
+}
+
+.usage-leaderboard-podium-card-rank-2 {
+  border-color: #cbd5e1;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.usage-leaderboard-podium-card-rank-3 {
+  border-color: #fdba74;
+  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
+}
+
+.usage-leaderboard-podium-user {
+  color: #0f172a !important;
+}
+
+.usage-leaderboard-podium-note {
+  color: #64748b !important;
+}
+
+.usage-leaderboard-podium-value-rank-1 {
+  color: #b45309;
+}
+
+.usage-leaderboard-podium-value-rank-2 {
+  color: #334155;
+}
+
+.usage-leaderboard-podium-value-rank-3 {
+  color: #c2410c;
+}
+
+html.dark .usage-leaderboard-podium-card {
+  background: #27272a !important;
+  color: #f8fafc;
+}
+
+html.dark .usage-leaderboard-podium-card-rank-1 {
+  border-color: rgb(245 158 11 / 0.45);
+  box-shadow:
+    inset 0 0 0 1px rgb(245 158 11 / 0.08),
+    0 1px 2px rgb(0 0 0 / 0.28);
+}
+
+html.dark .usage-leaderboard-podium-card-rank-2 {
+  border-color: rgb(148 163 184 / 0.45);
+  box-shadow:
+    inset 0 0 0 1px rgb(148 163 184 / 0.08),
+    0 1px 2px rgb(0 0 0 / 0.28);
+}
+
+html.dark .usage-leaderboard-podium-card-rank-3 {
+  border-color: rgb(249 115 22 / 0.45);
+  box-shadow:
+    inset 0 0 0 1px rgb(249 115 22 / 0.08),
+    0 1px 2px rgb(0 0 0 / 0.28);
+}
+
+html.dark .usage-leaderboard-podium-user {
+  color: #f8fafc !important;
+}
+
+html.dark .usage-leaderboard-podium-note {
+  color: #a1a1aa !important;
+}
+
+html.dark .usage-leaderboard-podium-value-rank-1 {
+  color: #fbbf24;
+}
+
+html.dark .usage-leaderboard-podium-value-rank-2 {
+  color: #cbd5e1;
+}
+
+html.dark .usage-leaderboard-podium-value-rank-3 {
+  color: #fb923c;
+}
+
 /* ==================== 自定义圆角样式 ==================== */
 .semi-radio,
 .semi-tagInput,
@@ -1023,4 +1124,6 @@ html.dark .with-pastel-balls::before {
   }
 }
 
-.ec-dbcd0a3c01b55203 { forced-color-adjust: auto; }
+.ec-dbcd0a3c01b55203 {
+  forced-color-adjust: auto;
+}
