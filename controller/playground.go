@@ -20,6 +20,10 @@ func PlaygroundImage(c *gin.Context) {
 	relayPlayground(c, types.RelayFormatOpenAIImage)
 }
 
+func PlaygroundResponses(c *gin.Context) {
+	relayPlayground(c, types.RelayFormatOpenAIResponses)
+}
+
 func relayPlayground(c *gin.Context, relayFormat types.RelayFormat) {
 	var newAPIError *types.NewAPIError
 

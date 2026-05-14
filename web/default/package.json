@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
+    "@fal-ai/client": "^1.10.0",
     "@fontsource-variable/public-sans": "^5.2.7",
     "@hookform/resolvers": "^5.2.2",
     "@hugeicons/core-free-icons": "^4.1.1",
@@ -36,6 +37,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
+    "fflate": "^0.8.2",
     "dayjs": "^1.11.19",
     "i18next": "^25.7.4",
     "i18next-browser-languagedetector": "^8.2.0",
