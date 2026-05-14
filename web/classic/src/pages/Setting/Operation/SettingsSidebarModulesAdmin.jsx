@@ -44,6 +44,7 @@ export default function SettingsSidebarModulesAdmin(props) {
       enabled: true,
       detail: true,
       token: true,
+      imageGeneration: true,
       log: true,
       midjourney: true,
     },
@@ -99,6 +100,7 @@ export default function SettingsSidebarModulesAdmin(props) {
         enabled: true,
         detail: true,
         token: true,
+        imageGeneration: true,
         log: true,
         midjourney: true,
       },
@@ -170,6 +172,7 @@ export default function SettingsSidebarModulesAdmin(props) {
             enabled: true,
             detail: true,
             token: true,
+            imageGeneration: true,
             log: true,
             midjourney: true,
           },
@@ -199,6 +202,11 @@ export default function SettingsSidebarModulesAdmin(props) {
       modules: [
         { key: 'detail', title: t('数据看板'), description: t('系统数据统计') },
         { key: 'token', title: t('令牌管理'), description: t('API令牌管理') },
+        {
+          key: 'imageGeneration',
+          title: t('图片生成'),
+          description: t('内置生图页面'),
+        },
         { key: 'log', title: t('使用日志'), description: t('API使用记录') },
         {
           key: 'midjourney',

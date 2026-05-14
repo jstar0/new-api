@@ -52,6 +52,11 @@ export function SidebarModulesCard() {
           description: t('API token management'),
         },
         {
+          key: 'imageGeneration',
+          title: t('Image Generation'),
+          description: t('Built-in image generation page'),
+        },
+        {
           key: 'log',
           title: t('Usage Logs'),
           description: t('API usage records'),

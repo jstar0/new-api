@@ -40,6 +40,7 @@ const routerMap = {
   subscription: '/console/subscription',
   log: '/console/log',
   midjourney: '/console/midjourney',
+  imageGeneration: '/console/image-generation',
   setting: '/console/setting',
   about: '/about',
   detail: '/console',
@@ -80,6 +81,11 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         text: t('令牌管理'),
         itemKey: 'token',
         to: '/token',
+      },
+      {
+        text: t('图片生成'),
+        itemKey: 'imageGeneration',
+        to: '/image-generation',
       },
       {
         text: t('使用日志'),

@@ -64,6 +64,10 @@ export function SidebarModulesSection({
         title: t('Token management'),
         description: t('Create, revoke, and audit API tokens.'),
       },
+      imageGeneration: {
+        title: t('Image Generation'),
+        description: t('Generate images through the built-in relay page.'),
+      },
       log: {
         title: t('Usage logs'),
         description: t('Detailed request logs for investigations.'),

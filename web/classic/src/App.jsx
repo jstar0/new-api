@@ -39,6 +39,7 @@ import Log from './pages/Log';
 import Chat from './pages/Chat';
 import Chat2Link from './pages/Chat2Link';
 import Midjourney from './pages/Midjourney';
+import ImageGeneration from './pages/ImageGeneration';
 import Pricing from './pages/Pricing';
 import Task from './pages/Task';
 import ModelPage from './pages/Model';
@@ -153,6 +154,14 @@ function App() {
           element={
             <PrivateRoute>
               <Playground />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path='/console/image-generation'
+          element={
+            <PrivateRoute>
+              <ImageGeneration />
             </PrivateRoute>
           }
         />

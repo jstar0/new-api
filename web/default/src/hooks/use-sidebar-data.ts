@@ -51,6 +51,11 @@ export function useSidebarData(): SidebarData {
             icon: Key,
           },
           {
+            title: t('Image Generation'),
+            url: '/image-generation',
+            icon: Image,
+          },
+          {
             title: t('Usage Logs'),
             url: '/usage-logs/common',
             icon: FileText,
