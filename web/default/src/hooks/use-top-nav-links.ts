@@ -16,6 +16,7 @@ const DEFAULT_HEADER_NAV_MODULES = {
   console: true,
   pricing: { enabled: true, requireAuth: false },
   rankings: { enabled: true, requireAuth: false },
+  modelMonitor: true,
   docs: true,
   about: true,
 }
@@ -117,6 +118,15 @@ export function useTopNavLinks(): TopNavLink[] {
   if (pricing && typeof pricing === 'object' && pricing.enabled) {
     const disabled = pricing.requireAuth && !isAuthed
     links.push({ title: t('Model Square'), href: '/pricing', disabled })
+  }
+
+  // Model monitor
+  if (modules?.modelMonitor !== false) {
+    links.push({
+      title: t('模型监控'),
+      href: 'https://status.turbo2c.xyz/',
+      external: true,
+    })
   }
 
   // Rankings

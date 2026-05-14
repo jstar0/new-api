@@ -29,6 +29,7 @@ const headerNavSchema = z.object({
   pricingRequireAuth: z.boolean(),
   rankingsEnabled: z.boolean(),
   rankingsRequireAuth: z.boolean(),
+  modelMonitor: z.boolean(),
   docs: z.boolean(),
   about: z.boolean(),
 })
@@ -63,6 +64,10 @@ const toFormValues = (config: HeaderNavModulesConfig): HeaderNavFormValues => ({
     config.rankings?.requireAuth === undefined
       ? HEADER_NAV_DEFAULT.rankings.requireAuth
       : Boolean(config.rankings.requireAuth),
+  modelMonitor:
+    config.modelMonitor === undefined
+      ? HEADER_NAV_DEFAULT.modelMonitor
+      : Boolean(config.modelMonitor),
   docs:
     config.docs === undefined ? HEADER_NAV_DEFAULT.docs : Boolean(config.docs),
   about:
@@ -93,6 +98,7 @@ export function HeaderNavigationSection({
       ...config,
       home: values.home,
       console: values.console,
+      modelMonitor: values.modelMonitor,
       docs: values.docs,
       about: values.about,
       pricing: {
@@ -141,6 +147,11 @@ export function HeaderNavigationSection({
       key: 'docs',
       title: t('Docs'),
       description: t('Documentation or external knowledge base.'),
+    },
+    {
+      key: 'modelMonitor',
+      title: t('模型监控'),
+      description: t('状态页和模型可用性监控。'),
     },
     {
       key: 'about',
