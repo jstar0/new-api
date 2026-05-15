@@ -362,6 +362,29 @@
   backdrop-filter: none !important;
 }
 
+.newapi-image-playground [data-image-detail-modal] {
+  z-index: 1000 !important;
+  background: rgba(15, 23, 42, 0.45) !important;
+}
+
+.dark .newapi-image-playground [data-image-detail-modal] {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+
+.newapi-image-playground [data-image-detail-panel] {
+  isolation: isolate;
+  background: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.dark .newapi-image-playground [data-image-detail-panel] {
+  background: #030712 !important;
+}
+
+.newapi-image-playground [data-image-detail-panel] > * {
+  box-sizing: border-box;
+}
+
 .newapi-image-playground .bg-white\/50,
 .newapi-image-playground .bg-white\/60,
 .newapi-image-playground .bg-white\/70,

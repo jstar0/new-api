@@ -400,7 +400,6 @@ async function callImagesApiSingle(
     if (isEdit) {
       const formData = new FormData()
       formData.append('model', profile.model)
-      formData.append('group', 'auto')
       formData.append('prompt', prompt)
       formData.append('size', params.size)
       formData.append('output_format', params.output_format)
@@ -465,7 +464,6 @@ async function callImagesApiSingle(
     } else {
       const body: Record<string, unknown> = {
         model: profile.model,
-        group: 'auto',
         prompt,
         size: params.size,
         output_format: params.output_format,
@@ -1024,7 +1022,6 @@ async function callResponsesImageApiSingle(
 
     const body = {
       model: profile.model,
-      group: 'auto',
       input: createResponsesInput(prompt, inputImageDataUrls),
       tools: [
         createResponsesImageTool(

@@ -351,15 +351,18 @@ export default function DetailModal() {
   return (
     <div
       data-no-drag-select
-      className='fixed inset-0 z-50 flex items-center justify-center p-4'
+      data-image-detail-modal
+      className='fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/45 p-4 dark:bg-black/65'
       onClick={() => setDetailTaskId(null)}
     >
-      <div className='animate-overlay-in absolute inset-0 bg-black/35 dark:bg-black/50' />
+      <div className='animate-overlay-in absolute inset-0 bg-slate-950/45 dark:bg-black/65' />
       <div
         ref={modalRef}
-        className='animate-modal-in relative z-10 flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl ring-1 ring-black/5 md:flex-row dark:border-white/[0.08] dark:bg-gray-900 dark:ring-white/10'
+        data-image-detail-panel
+        className='animate-modal-in relative z-[1001] isolate flex max-h-[calc(100vh-7rem)] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl ring-1 ring-black/5 md:flex-row dark:border-gray-800 dark:bg-gray-950 dark:ring-white/10'
         onClick={(e) => e.stopPropagation()}
       >
+        <div className='pointer-events-none absolute inset-0 -z-10 bg-white dark:bg-gray-950' />
         <div className='flex h-14 items-center justify-end px-4 md:hidden'>
           <button
             onClick={() => setDetailTaskId(null)}
@@ -373,7 +376,7 @@ export default function DetailModal() {
         {/* 左侧：图片 */}
         <div
           ref={imagePanelRef}
-          className='relative flex h-64 min-h-[16rem] w-full flex-shrink-0 items-center justify-center bg-gray-100 md:h-auto md:w-1/2 dark:bg-gray-950'
+          className='relative z-10 flex h-64 min-h-[16rem] w-full flex-shrink-0 items-center justify-center bg-gray-100 md:h-auto md:w-1/2 dark:bg-gray-900'
         >
           {task.status === 'done' &&
             outputLen > 0 &&
@@ -708,7 +711,7 @@ export default function DetailModal() {
         </div>
 
         {/* 右侧：信息 */}
-        <div className='flex w-full flex-col overflow-y-auto overscroll-contain p-5 md:w-1/2'>
+        <div className='relative z-10 flex w-full flex-col overflow-y-auto overscroll-contain bg-white p-5 md:w-1/2 dark:bg-gray-950'>
           <button
             onClick={() => setDetailTaskId(null)}
             className='absolute top-3 right-3 z-10 hidden rounded-full p-1 text-gray-400 transition hover:bg-gray-100 md:block dark:hover:bg-white/[0.06]'
