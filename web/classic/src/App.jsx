@@ -166,6 +166,14 @@ function App() {
           }
         />
         <Route
+          path='/image-generation'
+          element={
+            <PrivateRoute>
+              <ImageGeneration />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path='/console/redemption'
           element={
             <AdminRoute>

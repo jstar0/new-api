@@ -7,29 +7,14 @@ published by the Free Software Foundation, either version 3 of the
 License, or (at your option) any later version.
 */
 
-import React, { useEffect } from 'react';
-import { Spin, Typography } from '@douyinfe/semi-ui';
-
-const { Text } = Typography;
+import React from 'react';
+import ImagePlaygroundApp from './playground/App';
+import './playground/playground.css';
 
 export default function ImageGeneration() {
-  useEffect(() => {
-    window.location.replace('/image-generation');
-  }, []);
-
   return (
-    <div
-      style={{
-        minHeight: '60vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        gap: 12,
-      }}
-    >
-      <Spin size='large' />
-      <Text type='tertiary'>正在打开图片工作台...</Text>
+    <div className='newapi-image-playground min-h-screen bg-slate-50 text-slate-950 dark:bg-zinc-950 dark:text-zinc-50'>
+      <ImagePlaygroundApp />
     </div>
   );
 }
