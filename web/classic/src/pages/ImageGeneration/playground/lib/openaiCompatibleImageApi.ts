@@ -123,14 +123,22 @@ function createNewApiPlaygroundHeaders(
 }
 
 function createRequestHeaders(profile: ApiProfile): Record<string, string> {
-  const playgroundHeaders = createNewApiPlaygroundHeaders(profile)
-  if (!profile.apiKey.trim() || isNewApiPlaygroundBaseUrl(profile.baseUrl))
-    return playgroundHeaders
-
-  return {
-    ...playgroundHeaders,
-    Authorization: `Bearer ${profile.apiKey}`
+  const apiKey = profile.apiKey.trim()
+  if (apiKey) {
+    return {
+      Authorization: `Bearer ${apiKey}`
+    }
   }
+
+  return createNewApiPlaygroundHeaders(profile)
+}
+
+function getOpenAICompatibleRequestBaseUrl(profile: ApiProfile): string {
+  if (isNewApiPlaygroundBaseUrl(profile.baseUrl) && profile.apiKey.trim()) {
+    return '/v1'
+  }
+
+  return profile.baseUrl
 }
 
 function createResponsesImageTool(
@@ -389,6 +397,7 @@ async function callImagesApiSingle(
   const proxyConfig = readClientDevProxyConfig()
   const useApiProxy = shouldUseApiProxy(profile.apiProxy, proxyConfig)
   const requestHeaders = createRequestHeaders(profile)
+  const requestBaseUrl = getOpenAICompatibleRequestBaseUrl(profile)
   const paths = createOpenAICompatiblePaths()
 
   const controller = new AbortController()
@@ -452,7 +461,7 @@ async function callImagesApiSingle(
       }
 
       response = await fetch(
-        buildApiUrl(profile.baseUrl, paths.editPath, proxyConfig, useApiProxy),
+        buildApiUrl(requestBaseUrl, paths.editPath, proxyConfig, useApiProxy),
         {
           method: 'POST',
           headers: requestHeaders,
@@ -486,7 +495,7 @@ async function callImagesApiSingle(
 
       response = await fetch(
         buildApiUrl(
-          profile.baseUrl,
+          requestBaseUrl,
           paths.generationPath,
           proxyConfig,
           useApiProxy
@@ -999,6 +1008,7 @@ async function callResponsesImageApiSingle(
   const proxyConfig = readClientDevProxyConfig()
   const useApiProxy = shouldUseApiProxy(profile.apiProxy, proxyConfig)
   const requestHeaders = createRequestHeaders(profile)
+  const requestBaseUrl = getOpenAICompatibleRequestBaseUrl(profile)
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), profile.timeout * 1000)
 
@@ -1035,7 +1045,7 @@ async function callResponsesImageApiSingle(
     }
 
     const response = await fetch(
-      buildApiUrl(profile.baseUrl, 'responses', proxyConfig, useApiProxy),
+      buildApiUrl(requestBaseUrl, 'responses', proxyConfig, useApiProxy),
       {
         method: 'POST',
         headers: {
