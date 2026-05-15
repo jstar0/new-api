@@ -19,26 +19,26 @@ import {
   mergeImportedSettings,
   normalizeCustomProviderDefinition,
   normalizeSettings,
-  switchApiProfileProvider,
+  switchApiProfileProvider
 } from '../lib/apiProfiles'
 import {
   copyTextToClipboard,
-  getClipboardFailureMessage,
+  getClipboardFailureMessage
 } from '../lib/clipboard'
 import {
   isApiProxyAvailable,
   isApiProxyLocked,
-  readClientDevProxyConfig,
+  readClientDevProxyConfig
 } from '../lib/devProxy'
 import {
   DEFAULT_DROPDOWN_MAX_HEIGHT,
-  getDropdownMaxHeight,
+  getDropdownMaxHeight
 } from '../lib/dropdown'
 import { useStore, exportData, importData, clearData } from '../store'
 import type {
   ApiProfile,
   AppSettings,
-  CustomProviderDefinition,
+  CustomProviderDefinition
 } from '../types'
 import { Checkbox } from './Checkbox'
 import Select from './Select'
@@ -49,11 +49,10 @@ import {
   CopyIcon,
   PlusIcon,
   TrashIcon,
-  GithubIcon,
   ExportIcon,
   ImportIcon,
   DragHandleIcon,
-  LinkIcon,
+  LinkIcon
 } from './icons'
 
 function newId(prefix: string) {
@@ -70,7 +69,7 @@ const DEFAULT_COPY_IMPORT_URL_OPTIONS = {
   includeApiKey: false,
   useNewApiAddress: false,
   useNewApiKey: true,
-  useNewApiModel: false,
+  useNewApiModel: false
 }
 
 type CopyImportUrlOptions = typeof DEFAULT_COPY_IMPORT_URL_OPTIONS
@@ -93,7 +92,7 @@ function readCopyImportUrlOptions(): CopyImportUrlOptions {
       useNewApiAddress: Boolean(parsed.useNewApiAddress),
       useNewApiKey:
         parsed.useNewApiKey === undefined ? true : Boolean(parsed.useNewApiKey),
-      useNewApiModel: Boolean(parsed.useNewApiModel),
+      useNewApiModel: Boolean(parsed.useNewApiModel)
     }
   } catch {
     return DEFAULT_COPY_IMPORT_URL_OPTIONS
@@ -109,7 +108,7 @@ function saveCopyImportUrlOptions(options: CopyImportUrlOptions) {
       JSON.stringify({
         useNewApiAddress: options.useNewApiAddress,
         useNewApiKey: options.useNewApiKey,
-        useNewApiModel: options.useNewApiModel,
+        useNewApiModel: options.useNewApiModel
       })
     )
   } catch {
@@ -135,12 +134,12 @@ const DEFAULT_CUSTOM_PROVIDER_MANIFEST = {
       output_format: '$params.output_format',
       moderation: '$params.moderation',
       output_compression: '$params.output_compression',
-      n: '$params.n',
+      n: '$params.n'
     },
     result: {
       imageUrlPaths: ['data.*.url'],
-      b64JsonPaths: ['data.*.b64_json'],
-    },
+      b64JsonPaths: ['data.*.b64_json']
+    }
   },
   editSubmit: {
     path: 'images/edits',
@@ -154,22 +153,22 @@ const DEFAULT_CUSTOM_PROVIDER_MANIFEST = {
       output_format: '$params.output_format',
       moderation: '$params.moderation',
       output_compression: '$params.output_compression',
-      n: '$params.n',
+      n: '$params.n'
     },
     files: [
       { field: 'image[]', source: 'inputImages', array: true },
-      { field: 'mask', source: 'mask' },
+      { field: 'mask', source: 'mask' }
     ],
     result: {
       imageUrlPaths: ['data.*.url'],
-      b64JsonPaths: ['data.*.b64_json'],
-    },
-  },
+      b64JsonPaths: ['data.*.b64_json']
+    }
+  }
 }
 
 function createDefaultCustomProviderForm(): CustomProviderForm {
   return {
-    json: JSON.stringify(DEFAULT_CUSTOM_PROVIDER_MANIFEST, null, 2),
+    json: JSON.stringify(DEFAULT_CUSTOM_PROVIDER_MANIFEST, null, 2)
   }
 }
 
@@ -182,11 +181,11 @@ function customProviderToForm(
         name: provider.name,
         submit: provider.submit,
         editSubmit: provider.editSubmit,
-        poll: provider.poll,
+        poll: provider.poll
       },
       null,
       2
-    ),
+    )
   }
 }
 
@@ -197,7 +196,7 @@ function customProviderFormToInput(form: CustomProviderForm) {
 function isPristineNewOpenAIProfile(profile: ApiProfile) {
   const defaultProfile = createDefaultOpenAIProfile({
     id: profile.id,
-    name: '新配置',
+    name: '新配置'
   })
   return (
     profile.name === '新配置' &&
@@ -370,9 +369,9 @@ export default function SettingsModal() {
   const [duplicateProfileTooltipVisible, setDuplicateProfileTooltipVisible] =
     useState(false)
   const [llmPromptTooltipVisible, setLlmPromptTooltipVisible] = useState(false)
-  const [activeTab, setActiveTab] = useState<
-    'general' | 'api' | 'data' | 'about'
-  >('general')
+  const [activeTab, setActiveTab] = useState<'general' | 'api' | 'data'>(
+    'general'
+  )
   const [exportConfig, setExportConfig] = useState(true)
   const [exportTasks, setExportTasks] = useState(true)
   const [importConfig, setImportConfig] = useState(true)
@@ -433,7 +432,7 @@ export default function SettingsModal() {
   const defaultProviderOrder = [
     'openai',
     'fal',
-    ...draft.customProviders.map((p) => p.id),
+    ...draft.customProviders.map((p) => p.id)
   ]
   const providerOrder = draft.providerOrder || defaultProviderOrder
 
@@ -449,17 +448,17 @@ export default function SettingsModal() {
         {
           label: '删除',
           variant: 'danger' as const,
-          onClick: () => confirmDeleteCustomProvider(provider),
-        },
-      ],
-    })),
+          onClick: () => confirmDeleteCustomProvider(provider)
+        }
+      ]
+    }))
   ]
 
   const providerOptions = [
     {
       label: '创建自定义服务商',
       value: ADD_CUSTOM_PROVIDER_VALUE,
-      variant: 'action' as const,
+      variant: 'action' as const
     },
     ...unorderedProviderOptions.sort((a, b) => {
       const aIndex = providerOrder.indexOf(String(a.value))
@@ -469,7 +468,7 @@ export default function SettingsModal() {
       const validB =
         bIndex !== -1 ? bIndex : defaultProviderOrder.indexOf(String(b.value))
       return validA - validB
-    }),
+    })
   ]
 
   const getDefaultModelForMode = (apiMode: AppSettings['apiMode']) =>
@@ -494,7 +493,7 @@ export default function SettingsModal() {
       )
         ? normalizeSettings({
             ...normalizedSettings,
-            activeProfileId: reusedTaskApiProfileId,
+            activeProfileId: reusedTaskApiProfileId
           })
         : normalizedSettings
     const nextDraft = normalizeSettings({
@@ -504,8 +503,8 @@ export default function SettingsModal() {
         apiProxy:
           profile.provider === 'openai' && apiProxyAvailable
             ? apiProxyLocked || profile.apiProxy
-            : false,
-      })),
+            : false
+      }))
     })
     setDraft(nextDraft)
     setTimeoutInput(String(getActiveApiProfile(nextDraft).timeout))
@@ -514,7 +513,7 @@ export default function SettingsModal() {
     apiProxyLocked,
     showSettings,
     settings,
-    reusedTaskApiProfileId,
+    reusedTaskApiProfileId
   ])
 
   useEffect(() => {
@@ -565,7 +564,7 @@ export default function SettingsModal() {
     }
     const listenerOptions = {
       passive: false,
-      capture: true,
+      capture: true
     } as AddEventListenerOptions
     const previousOverflow = document.body.style.overflow
     const previousOverscroll = document.body.style.overscrollBehavior
@@ -628,7 +627,7 @@ export default function SettingsModal() {
           profile.provider === 'openai' && apiProxyAvailable
             ? apiProxyLocked || profile.apiProxy
             : false,
-        codexCli: profile.provider === 'openai' ? profile.codexCli : false,
+        codexCli: profile.provider === 'openai' ? profile.codexCli : false
       }
     })
     const fallbackProfile = createDefaultOpenAIProfile({ id: newId('openai') })
@@ -641,7 +640,7 @@ export default function SettingsModal() {
         (profile) => profile.id === nextDraft.activeProfileId
       )
         ? nextDraft.activeProfileId
-        : (normalizedProfiles[0]?.id ?? fallbackProfile.id),
+        : (normalizedProfiles[0]?.id ?? fallbackProfile.id)
     })
     setDraft(normalizedDraft)
     setSettings(normalizedDraft)
@@ -701,7 +700,7 @@ export default function SettingsModal() {
     )
     const importProfile: ApiProfile = {
       ...profile,
-      apiKey: options.includeApiKey ? profile.apiKey : '',
+      apiKey: options.includeApiKey ? profile.apiKey : ''
     }
     if (!options.includeApiKey) {
       if (options.useNewApiAddress) importProfile.baseUrl = '{address}'
@@ -712,7 +711,7 @@ export default function SettingsModal() {
       'settings',
       JSON.stringify({
         customProviders: provider ? [provider] : [],
-        profiles: [importProfile],
+        profiles: [importProfile]
       })
     )
 
@@ -756,7 +755,7 @@ export default function SettingsModal() {
     ...draft,
     profiles: draft.profiles.map((profile) =>
       profile.id === activeProfile.id ? { ...profile, ...patch } : profile
-    ),
+    )
   })
 
   const updateActiveProfile = (patch: Partial<ApiProfile>, commit = false) => {
@@ -784,7 +783,7 @@ export default function SettingsModal() {
               ? { ...profile, timeout: normalizedTimeout }
               : profile
           )
-        : draft.profiles,
+        : draft.profiles
     }
     commitSettings(nextDraft)
     setShowSettings(false)
@@ -806,7 +805,7 @@ export default function SettingsModal() {
     activeProfile.id,
     activeProfile.provider,
     activeProfile.timeout,
-    timeoutInput,
+    timeoutInput
   ])
 
   useCloseOnEscape(showSettings, handleClose)
@@ -850,12 +849,12 @@ export default function SettingsModal() {
     setReusedTaskApiProfile(null)
     const profile = createDefaultOpenAIProfile({
       id: newId('openai'),
-      name: '新配置',
+      name: '新配置'
     })
     const nextDraft = normalizeSettings({
       ...draft,
       profiles: [...draft.profiles, profile],
-      activeProfileId: profile.id,
+      activeProfileId: profile.id
     })
     commitSettings(nextDraft)
     setShowProfileMenu(false)
@@ -867,12 +866,12 @@ export default function SettingsModal() {
     const profile: ApiProfile = {
       ...activeProfile,
       id: newId(activeProfile.provider === 'openai' ? 'openai' : 'profile'),
-      name: `${activeProfile.name}（复制）`,
+      name: `${activeProfile.name}（复制）`
     }
     const nextDraft = normalizeSettings({
       ...draft,
       profiles: [...draft.profiles, profile],
-      activeProfileId: profile.id,
+      activeProfileId: profile.id
     })
     commitSettings(nextDraft)
     setShowProfileMenu(false)
@@ -973,7 +972,7 @@ export default function SettingsModal() {
       id: profile.id,
       startX: touch.clientX,
       startY: touch.clientY,
-      moved: false,
+      moved: false
     }
     setDraggedProfileId(profile.id)
     setProfileTouchDragPreview({
@@ -984,7 +983,7 @@ export default function SettingsModal() {
       width: rect.width,
       height: rect.height,
       offsetX: touch.clientX - rect.left,
-      offsetY: touch.clientY - rect.top,
+      offsetY: touch.clientY - rect.top
     })
   }
 
@@ -1056,7 +1055,7 @@ export default function SettingsModal() {
       activeProfileId:
         draft.activeProfileId === id
           ? nextProfiles[0].id
-          : draft.activeProfileId,
+          : draft.activeProfileId
     })
     commitSettings(nextDraft)
   }
@@ -1069,7 +1068,7 @@ export default function SettingsModal() {
     const currentOrder = draft.providerOrder || [
       'openai',
       'fal',
-      ...draft.customProviders.map((p) => p.id),
+      ...draft.customProviders.map((p) => p.id)
     ]
     const sourceIndex = currentOrder.indexOf(String(sourceValue))
     const targetIndex = currentOrder.indexOf(String(targetValue))
@@ -1144,7 +1143,7 @@ export default function SettingsModal() {
           ...draft,
           customProviders: draft.customProviders.map((provider) =>
             provider.id === editingCustomProviderId ? customProvider : provider
-          ),
+          )
         })
         commitSettings(nextDraft)
         setShowCustomProviderImport(false)
@@ -1164,7 +1163,7 @@ export default function SettingsModal() {
         customProviders: [...draft.customProviders, customProvider],
         profiles: draft.profiles.map((profile) =>
           profile.id === activeProfile.id ? nextProfile : profile
-        ),
+        )
       })
       commitSettings(nextDraft)
       setShowCustomProviderImport(false)
@@ -1181,7 +1180,7 @@ export default function SettingsModal() {
     setConfirmDialog({
       title: '删除服务商',
       message: `确定要删除自定义服务商「${provider.name}」吗？正在使用它的配置会切回 OpenAI 兼容接口。`,
-      action: () => deleteCustomProvider(provider),
+      action: () => deleteCustomProvider(provider)
     })
   }
 
@@ -1196,7 +1195,7 @@ export default function SettingsModal() {
         profile.provider === providerId
           ? switchApiProfileProvider(profile, 'openai')
           : profile
-      ),
+      )
     })
     commitSettings(nextDraft)
     showToast('服务商已删除', 'success')
@@ -1258,11 +1257,11 @@ export default function SettingsModal() {
                     ? { ...importedProfile, id: activeProfile.id }
                     : profile
                 ),
-              activeProfileId: activeProfile.id,
+              activeProfileId: activeProfile.id
             })
           : normalizeSettings({
               ...mergedDraft,
-              activeProfileId: importedProfile.id,
+              activeProfileId: importedProfile.id
             })
         setDraft(nextDraft)
         setSettings(nextDraft)
@@ -1413,25 +1412,6 @@ export default function SettingsModal() {
                 </svg>
                 数据管理
               </button>
-              <button
-                onClick={() => setActiveTab('about')}
-                className={`flex flex-shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm whitespace-nowrap transition-colors ${activeTab === 'about' ? 'bg-white font-medium text-blue-600 shadow-sm dark:bg-white/[0.08] dark:text-blue-400' : 'text-gray-600 hover:bg-gray-100/80 dark:text-gray-400 dark:hover:bg-white/[0.04]'}`}
-              >
-                <svg
-                  className='h-4 w-4'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-                  />
-                </svg>
-                关于
-              </button>
             </nav>
           </div>
 
@@ -1451,7 +1431,7 @@ export default function SettingsModal() {
                           onChange={(val) =>
                             commitSettings({
                               ...draft,
-                              enterSubmit: val === 'enter',
+                              enterSubmit: val === 'enter'
                             })
                           }
                           options={[
@@ -1460,8 +1440,8 @@ export default function SettingsModal() {
                               label: navigator.userAgent.includes('Mac')
                                 ? 'Cmd + Enter'
                                 : 'Ctrl + Enter',
-                              value: 'ctrl-enter',
-                            },
+                              value: 'ctrl-enter'
+                            }
                           ]}
                           className='w-full rounded-xl border border-gray-200/60 bg-white/50 px-3 py-1.5 text-xs text-gray-700 shadow-sm transition-all duration-200 outline-none hover:bg-white dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-200 dark:hover:bg-white/[0.06]'
                         />
@@ -1485,7 +1465,7 @@ export default function SettingsModal() {
                         onClick={() =>
                           commitSettings({
                             ...draft,
-                            clearInputAfterSubmit: !draft.clearInputAfterSubmit,
+                            clearInputAfterSubmit: !draft.clearInputAfterSubmit
                           })
                         }
                         className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${draft.clearInputAfterSubmit ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
@@ -1515,7 +1495,7 @@ export default function SettingsModal() {
                         onClick={() =>
                           commitSettings({
                             ...draft,
-                            persistInputOnRestart: !draft.persistInputOnRestart,
+                            persistInputOnRestart: !draft.persistInputOnRestart
                           })
                         }
                         className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${draft.persistInputOnRestart ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
@@ -1546,7 +1526,7 @@ export default function SettingsModal() {
                           commitSettings({
                             ...draft,
                             reuseTaskApiProfileTemporarily:
-                              !draft.reuseTaskApiProfileTemporarily,
+                              !draft.reuseTaskApiProfileTemporarily
                           })
                         }
                         className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${draft.reuseTaskApiProfileTemporarily ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
@@ -1578,7 +1558,7 @@ export default function SettingsModal() {
                         onClick={() =>
                           commitSettings({
                             ...draft,
-                            alwaysShowRetryButton: !draft.alwaysShowRetryButton,
+                            alwaysShowRetryButton: !draft.alwaysShowRetryButton
                           })
                         }
                         className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${draft.alwaysShowRetryButton ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
@@ -1824,7 +1804,7 @@ export default function SettingsModal() {
                                             title: '删除配置',
                                             message: `确定要删除配置「${profile.name}」吗？`,
                                             action: () =>
-                                              deleteProfile(profile.id),
+                                              deleteProfile(profile.id)
                                           })
                                         }}
                                         className='flex h-5 w-5 shrink-0 items-center justify-center rounded text-gray-400 opacity-60 transition-all hover:bg-red-50 hover:text-red-500 hover:opacity-100 dark:hover:bg-red-500/10'
@@ -2093,8 +2073,8 @@ export default function SettingsModal() {
                           { label: 'Images API (/v1/images)', value: 'images' },
                           {
                             label: 'Responses API (/v1/responses)',
-                            value: 'responses',
-                          },
+                            value: 'responses'
+                          }
                         ]}
                         className='w-full rounded-xl border border-gray-200/70 bg-white/60 px-3 py-2.5 text-sm text-gray-700 transition outline-none focus:border-blue-300 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-200 dark:focus:border-blue-500/50'
                       />
@@ -2203,7 +2183,7 @@ export default function SettingsModal() {
                             updateActiveProfile(
                               {
                                 responseFormatB64Json:
-                                  !activeProfile.responseFormatB64Json,
+                                  !activeProfile.responseFormatB64Json
                               },
                               true
                             )
@@ -2387,7 +2367,7 @@ export default function SettingsModal() {
                         setConfirmDialog({
                           title: '清空所选数据',
                           message: `确定要清空所选的数据吗？此操作不可恢复。`,
-                          action: () => handleClearAllData(),
+                          action: () => handleClearAllData()
                         })
                       }
                       disabled={!clearConfig && !clearTasks}
@@ -2395,76 +2375,6 @@ export default function SettingsModal() {
                     >
                       清空所选数据
                     </button>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'about' && (
-                <div className='flex h-full min-h-[300px] flex-col items-center justify-center px-6 pb-8'>
-                  <a
-                    href='https://github.com/CookSleep/gpt_image_playground'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='group flex flex-col items-center outline-none'
-                  >
-                    <div className='mb-5 flex h-[88px] w-[88px] items-center justify-center rounded-full border border-gray-200/80 bg-gray-50/50 text-gray-800 transition-colors group-hover:bg-gray-100 dark:border-white/[0.08] dark:bg-white/[0.02] dark:text-gray-100 dark:group-hover:bg-white/[0.06]'>
-                      <GithubIcon className='h-11 w-11' />
-                    </div>
-                    <h4 className='text-[17px] font-bold text-gray-800 dark:text-gray-100'>
-                      GPT Image Playground
-                    </h4>
-                    <p className='mt-1.5 text-[13px] text-gray-500 transition-colors group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'>
-                      @CookSleep
-                    </p>
-                  </a>
-
-                  <p className='mt-8 mb-6 max-w-[360px] text-center text-[13px] leading-relaxed text-gray-500 dark:text-gray-400'>
-                    本项目的成长离不开每一位用户的使用、反馈、贡献与支持，感谢一路有你。
-                  </p>
-
-                  <div className='flex flex-wrap items-center justify-center gap-3'>
-                    <a
-                      href='https://github.com/CookSleep/gpt_image_playground/issues'
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='flex items-center justify-center gap-2 rounded-xl bg-gray-100/80 px-5 py-2.5 text-sm font-medium whitespace-nowrap text-gray-700 transition-all hover:bg-gray-200 hover:text-gray-900 dark:bg-white/[0.06] dark:text-gray-300 dark:hover:bg-white/[0.1] dark:hover:text-white'
-                    >
-                      <svg
-                        className='h-4 w-4 opacity-70'
-                        fill='none'
-                        stroke='currentColor'
-                        viewBox='0 0 24 24'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={2}
-                          d='M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z'
-                        />
-                      </svg>
-                      反馈问题
-                    </a>
-                    <a
-                      href='https://www.ifdian.net/a/cooksleep'
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='flex items-center justify-center gap-2 rounded-xl bg-gray-100/80 px-5 py-2.5 text-sm font-medium whitespace-nowrap text-gray-700 transition-all hover:bg-gray-200 hover:text-gray-900 dark:bg-white/[0.06] dark:text-gray-300 dark:hover:bg-white/[0.1] dark:hover:text-white'
-                    >
-                      <svg
-                        className='h-4 w-4 opacity-70'
-                        fill='none'
-                        stroke='currentColor'
-                        viewBox='0 0 24 24'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={2}
-                          d='M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z'
-                        />
-                      </svg>
-                      赞助作者
-                    </a>
                   </div>
                 </div>
               )}
@@ -2661,7 +2571,7 @@ export default function SettingsModal() {
               left: profileTouchDragPreview.x - profileTouchDragPreview.offsetX,
               top: profileTouchDragPreview.y - profileTouchDragPreview.offsetY,
               width: profileTouchDragPreview.width,
-              minHeight: profileTouchDragPreview.height,
+              minHeight: profileTouchDragPreview.height
             }}
           >
             <div className='flex min-w-0 flex-1 items-center gap-2 pr-2'>
@@ -2716,7 +2626,7 @@ export default function SettingsModal() {
                       checked={copyImportUrlOptions.useNewApiAddress}
                       onChange={(checked) =>
                         updateCopyImportUrlOptions({
-                          useNewApiAddress: checked,
+                          useNewApiAddress: checked
                         })
                       }
                       label={
@@ -2766,7 +2676,7 @@ export default function SettingsModal() {
                   onClick={() => {
                     const options = {
                       ...copyImportUrlOptions,
-                      includeApiKey: false,
+                      includeApiKey: false
                     }
                     copyProfileImportUrl(copyImportUrlProfile, options)
                   }}
@@ -2778,7 +2688,7 @@ export default function SettingsModal() {
                   onClick={() => {
                     const options = {
                       ...copyImportUrlOptions,
-                      includeApiKey: true,
+                      includeApiKey: true
                     }
                     copyProfileImportUrl(copyImportUrlProfile, options)
                   }}

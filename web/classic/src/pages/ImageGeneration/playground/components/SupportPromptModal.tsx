@@ -15,10 +15,10 @@ export default function SupportPromptModal() {
 
   const blockedByHigherPriorityModal = Boolean(
     confirmDialog ||
-    detailTaskId ||
-    lightboxImageId ||
-    showSettings ||
-    maskEditorImageId
+      detailTaskId ||
+      lightboxImageId ||
+      showSettings ||
+      maskEditorImageId
   )
   const visible = supportPromptOpen && !blockedByHigherPriorityModal
 
@@ -68,7 +68,7 @@ export default function SupportPromptModal() {
         </div>
 
         <h3 className='mb-3 text-center text-xl font-bold text-gray-800 dark:text-gray-100'>
-          感谢使用 🎉
+          感谢使用
         </h3>
 
         <p className='mb-8 px-2 text-center text-[15px] leading-relaxed text-gray-500 dark:text-gray-400'>
@@ -78,46 +78,17 @@ export default function SupportPromptModal() {
           </strong>{' '}
           张图片！
           <br />
-          如果这个工具对你有所帮助，
-          <br />
-          欢迎赞助作者，或反馈分享你的建议。
+          可以继续在 TurboAPI 中管理模型、额度和生成记录。
         </p>
 
-        <div className='flex flex-col items-center justify-center gap-3 sm:flex-row'>
-          <a
-            href='https://www.ifdian.net/a/cooksleep'
-            target='_blank'
-            rel='noopener noreferrer'
+        <div className='flex items-center justify-center'>
+          <button
+            type='button'
             onClick={dismissSupportPrompt}
-            className='flex w-full flex-1 items-center justify-center gap-2 rounded-2xl bg-[#946ce6] px-5 py-3.5 text-[15px] font-semibold text-white transition-all hover:bg-[#8358dc] active:scale-[0.98] sm:w-auto dark:bg-[#946ce6] dark:hover:bg-[#a885ee]'
+            className='flex w-full items-center justify-center rounded-2xl bg-[#946ce6] px-5 py-3.5 text-[15px] font-semibold text-white transition-all hover:bg-[#8358dc] active:scale-[0.98] dark:bg-[#946ce6] dark:hover:bg-[#a885ee]'
           >
-            <svg className='h-4 w-4' fill='currentColor' viewBox='0 0 24 24'>
-              <path d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' />
-            </svg>
-            赞助作者
-          </a>
-          <a
-            href='https://github.com/CookSleep/gpt_image_playground/issues'
-            target='_blank'
-            rel='noopener noreferrer'
-            onClick={dismissSupportPrompt}
-            className='flex w-full flex-1 items-center justify-center gap-2 rounded-2xl bg-[#f4f4f5] px-5 py-3.5 text-[15px] font-semibold text-gray-600 transition-all hover:bg-gray-200 active:scale-[0.98] sm:w-auto dark:bg-[#27272a] dark:text-gray-300 dark:hover:bg-[#3f3f46]'
-          >
-            <svg
-              className='h-[18px] w-[18px] opacity-70'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z'
-              />
-            </svg>
-            反馈问题
-          </a>
+            继续使用
+          </button>
         </div>
       </div>
     </div>,
