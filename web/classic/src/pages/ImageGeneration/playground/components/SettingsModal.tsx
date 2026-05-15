@@ -74,6 +74,46 @@ const DEFAULT_COPY_IMPORT_URL_OPTIONS = {
 
 type CopyImportUrlOptions = typeof DEFAULT_COPY_IMPORT_URL_OPTIONS
 
+interface SettingsSwitchProps {
+  checked: boolean
+  label: string
+  onChange: () => void
+  disabled?: boolean
+}
+
+function SettingsSwitch({
+  checked,
+  label,
+  onChange,
+  disabled = false
+}: SettingsSwitchProps) {
+  return (
+    <button
+      type='button'
+      onClick={() => {
+        if (!disabled) onChange()
+      }}
+      disabled={disabled}
+      className={`inline-flex h-7 min-w-[58px] shrink-0 items-center justify-between gap-1 rounded-full border px-1 text-[11px] font-semibold transition-colors focus:ring-2 focus:ring-blue-500/20 focus:outline-none ${
+        checked
+          ? 'border-blue-500 bg-blue-500 text-white'
+          : 'border-gray-300 bg-white text-gray-600 dark:border-white/15 dark:bg-gray-800 dark:text-gray-300'
+      } ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+      role='switch'
+      aria-checked={checked}
+      aria-label={label}
+    >
+      <span className='w-5 text-center leading-none'>{checked ? '开' : '关'}</span>
+      <span
+        className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+          checked ? 'translate-x-0' : 'bg-gray-200 dark:bg-gray-500'
+        }`}
+        aria-hidden='true'
+      />
+    </button>
+  )
+}
+
 function readCopyImportUrlOptions(): CopyImportUrlOptions {
   if (typeof window === 'undefined') return DEFAULT_COPY_IMPORT_URL_OPTIONS
 
@@ -1460,23 +1500,16 @@ export default function SettingsModal() {
                       <span className='block text-sm text-gray-600 dark:text-gray-300'>
                         提交任务后清空输入框
                       </span>
-                      <button
-                        type='button'
-                        onClick={() =>
+                      <SettingsSwitch
+                        checked={draft.clearInputAfterSubmit}
+                        label='提交任务后清空输入框'
+                        onChange={() =>
                           commitSettings({
                             ...draft,
                             clearInputAfterSubmit: !draft.clearInputAfterSubmit
                           })
                         }
-                        className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${draft.clearInputAfterSubmit ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                        role='switch'
-                        aria-checked={draft.clearInputAfterSubmit}
-                        aria-label='提交任务后清空输入框'
-                      >
-                        <span
-                          className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${draft.clearInputAfterSubmit ? 'translate-x-[14px]' : 'translate-x-[2px]'}`}
-                        />
-                      </button>
+                      />
                     </div>
                     <div
                       data-selectable-text
@@ -1490,23 +1523,16 @@ export default function SettingsModal() {
                       <span className='block text-sm text-gray-600 dark:text-gray-300'>
                         重启后加载上次的输入框
                       </span>
-                      <button
-                        type='button'
-                        onClick={() =>
+                      <SettingsSwitch
+                        checked={draft.persistInputOnRestart}
+                        label='重启后加载上次的输入框'
+                        onChange={() =>
                           commitSettings({
                             ...draft,
                             persistInputOnRestart: !draft.persistInputOnRestart
                           })
                         }
-                        className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${draft.persistInputOnRestart ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                        role='switch'
-                        aria-checked={draft.persistInputOnRestart}
-                        aria-label='重启后加载上次的输入框'
-                      >
-                        <span
-                          className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${draft.persistInputOnRestart ? 'translate-x-[14px]' : 'translate-x-[2px]'}`}
-                        />
-                      </button>
+                      />
                     </div>
                     <div
                       data-selectable-text
@@ -1520,24 +1546,17 @@ export default function SettingsModal() {
                       <span className='block text-sm text-gray-600 dark:text-gray-300'>
                         复用配置时临时复用该任务的 API 配置
                       </span>
-                      <button
-                        type='button'
-                        onClick={() =>
+                      <SettingsSwitch
+                        checked={draft.reuseTaskApiProfileTemporarily}
+                        label='复用配置时临时复用该任务的 API 配置'
+                        onChange={() =>
                           commitSettings({
                             ...draft,
                             reuseTaskApiProfileTemporarily:
                               !draft.reuseTaskApiProfileTemporarily
                           })
                         }
-                        className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${draft.reuseTaskApiProfileTemporarily ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                        role='switch'
-                        aria-checked={draft.reuseTaskApiProfileTemporarily}
-                        aria-label='复用配置时临时复用该任务的 API 配置'
-                      >
-                        <span
-                          className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${draft.reuseTaskApiProfileTemporarily ? 'translate-x-[14px]' : 'translate-x-[2px]'}`}
-                        />
-                      </button>
+                      />
                     </div>
                     <div
                       data-selectable-text
@@ -1553,23 +1572,16 @@ export default function SettingsModal() {
                       <span className='block text-sm text-gray-600 dark:text-gray-300'>
                         成功任务仍然展示重试按钮
                       </span>
-                      <button
-                        type='button'
-                        onClick={() =>
+                      <SettingsSwitch
+                        checked={draft.alwaysShowRetryButton}
+                        label='成功任务仍然展示重试按钮'
+                        onChange={() =>
                           commitSettings({
                             ...draft,
                             alwaysShowRetryButton: !draft.alwaysShowRetryButton
                           })
                         }
-                        className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${draft.alwaysShowRetryButton ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                        role='switch'
-                        aria-checked={draft.alwaysShowRetryButton}
-                        aria-label='成功任务仍然展示重试按钮'
-                      >
-                        <span
-                          className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${draft.alwaysShowRetryButton ? 'translate-x-[14px]' : 'translate-x-[2px]'}`}
-                        />
-                      </button>
+                      />
                     </div>
                     <div
                       data-selectable-text
@@ -1911,23 +1923,16 @@ export default function SettingsModal() {
                         <span className='block text-sm text-gray-600 dark:text-gray-300'>
                           Codex CLI 兼容模式
                         </span>
-                        <button
-                          type='button'
-                          onClick={() =>
+                        <SettingsSwitch
+                          checked={!!activeProfile.codexCli}
+                          label='Codex CLI 兼容模式'
+                          onChange={() =>
                             updateActiveProfile(
                               { codexCli: !activeProfile.codexCli },
                               true
                             )
                           }
-                          className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${activeProfile.codexCli ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                          role='switch'
-                          aria-checked={activeProfile.codexCli}
-                          aria-label='Codex CLI 兼容模式'
-                        >
-                          <span
-                            className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${activeProfile.codexCli ? 'translate-x-[14px]' : 'translate-x-[2px]'}`}
-                          />
-                        </button>
+                        />
                       </div>
                       <div
                         data-selectable-text
@@ -1948,25 +1953,17 @@ export default function SettingsModal() {
                         <span className='block text-sm text-gray-600 dark:text-gray-300'>
                           API 代理
                         </span>
-                        <button
-                          type='button'
-                          onClick={() => {
-                            if (!apiProxyLocked)
-                              updateActiveProfile(
-                                { apiProxy: !activeProfile.apiProxy },
-                                true
-                              )
-                          }}
+                        <SettingsSwitch
+                          checked={apiProxyChecked}
+                          label='API 代理'
                           disabled={apiProxyLocked}
-                          className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${apiProxyChecked ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'} ${apiProxyLocked ? 'cursor-not-allowed opacity-70' : ''}`}
-                          role='switch'
-                          aria-checked={apiProxyChecked}
-                          aria-label='API 代理'
-                        >
-                          <span
-                            className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${apiProxyChecked ? 'translate-x-[14px]' : 'translate-x-[2px]'}`}
-                          />
-                        </button>
+                          onChange={() =>
+                            updateActiveProfile(
+                              { apiProxy: !activeProfile.apiProxy },
+                              true
+                            )
+                          }
+                        />
                       </div>
                       <div
                         data-selectable-text
@@ -2177,9 +2174,10 @@ export default function SettingsModal() {
                         <span className='block text-sm text-gray-600 dark:text-gray-300'>
                           返回 Base64 图片数据
                         </span>
-                        <button
-                          type='button'
-                          onClick={() =>
+                        <SettingsSwitch
+                          checked={!!activeProfile.responseFormatB64Json}
+                          label='返回 Base64 图片数据'
+                          onChange={() =>
                             updateActiveProfile(
                               {
                                 responseFormatB64Json:
@@ -2188,15 +2186,7 @@ export default function SettingsModal() {
                               true
                             )
                           }
-                          className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${activeProfile.responseFormatB64Json ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                          role='switch'
-                          aria-checked={!!activeProfile.responseFormatB64Json}
-                          aria-label='返回 Base64 图片数据'
-                        >
-                          <span
-                            className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${activeProfile.responseFormatB64Json ? 'translate-x-[14px]' : 'translate-x-[2px]'}`}
-                          />
-                        </button>
+                        />
                       </div>
                       <div
                         data-selectable-text

@@ -61,7 +61,7 @@ function buildTurboProfile(
     apiMode: existingProfile?.apiMode || 'images',
     codexCli: existingProfile?.codexCli ?? false,
     apiProxy: existingProfile?.apiProxy ?? false,
-    responseFormatB64Json: existingProfile?.responseFormatB64Json,
+    responseFormatB64Json: existingProfile?.responseFormatB64Json ?? true,
     providerDrafts: existingProfile?.providerDrafts
   }
 }

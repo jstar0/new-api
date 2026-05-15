@@ -24,6 +24,7 @@ export const DEFAULT_FAL_BASE_URL = 'https://fal.run'
 export const DEFAULT_FAL_MODEL = 'openai/gpt-image-2'
 export const DEFAULT_OPENAI_PROFILE_ID = 'default-openai'
 export const DEFAULT_API_TIMEOUT = 600
+const DEFAULT_RESPONSE_FORMAT_B64_JSON = true
 
 const BUILT_IN_PROVIDER_IDS = new Set<ApiProvider>(['openai', 'fal'])
 const DEFAULT_CUSTOM_PROVIDER_PATHS = {
@@ -407,6 +408,10 @@ export function normalizeCustomProviderDefinitions(
     .filter((item): item is CustomProviderDefinition => Boolean(item))
 }
 
+function readBooleanOrDefault(input: unknown, fallback: boolean): boolean {
+  return typeof input === 'boolean' ? input : fallback
+}
+
 export function createDefaultOpenAIProfile(
   overrides: Partial<ApiProfile> = {}
 ): ApiProfile {
@@ -421,6 +426,7 @@ export function createDefaultOpenAIProfile(
     apiMode: 'images',
     codexCli: false,
     apiProxy: DEFAULT_OPENAI_API_PROXY,
+    responseFormatB64Json: DEFAULT_RESPONSE_FORMAT_B64_JSON,
     ...overrides,
   }
 }
@@ -470,7 +476,10 @@ export function switchApiProfileProvider(
       apiMode: savedDraft?.apiMode ?? 'images',
       codexCli: false,
       apiProxy: false,
-      responseFormatB64Json: savedDraft?.responseFormatB64Json,
+      responseFormatB64Json: readBooleanOrDefault(
+        savedDraft?.responseFormatB64Json,
+        DEFAULT_RESPONSE_FORMAT_B64_JSON
+      ),
       providerDrafts,
     }
   }
@@ -493,7 +502,10 @@ export function switchApiProfileProvider(
       apiMode: savedDraft?.apiMode ?? 'images',
       codexCli: false,
       apiProxy: false,
-      responseFormatB64Json: savedDraft?.responseFormatB64Json,
+      responseFormatB64Json: readBooleanOrDefault(
+        savedDraft?.responseFormatB64Json,
+        DEFAULT_RESPONSE_FORMAT_B64_JSON
+      ),
       providerDrafts,
     }
   }
@@ -506,7 +518,10 @@ export function switchApiProfileProvider(
     apiMode: savedDraft?.apiMode ?? profile.apiMode,
     codexCli: savedDraft?.codexCli ?? profile.codexCli,
     apiProxy: savedDraft?.apiProxy ?? DEFAULT_OPENAI_API_PROXY,
-    responseFormatB64Json: savedDraft?.responseFormatB64Json,
+    responseFormatB64Json: readBooleanOrDefault(
+      savedDraft?.responseFormatB64Json,
+      DEFAULT_RESPONSE_FORMAT_B64_JSON
+    ),
     providerDrafts,
   }
 }
@@ -549,8 +564,10 @@ function normalizeProviderDraft(
       typeof input.codexCli === 'boolean' ? input.codexCli : fallback.codexCli,
     apiProxy:
       typeof input.apiProxy === 'boolean' ? input.apiProxy : fallback.apiProxy,
-    responseFormatB64Json:
-      input.responseFormatB64Json === true ? true : undefined,
+    responseFormatB64Json: readBooleanOrDefault(
+      input.responseFormatB64Json,
+      fallback.responseFormatB64Json ?? DEFAULT_RESPONSE_FORMAT_B64_JSON
+    ),
   }
 }
 
@@ -626,8 +643,10 @@ export function normalizeApiProfile(
       typeof record.apiProxy === 'boolean'
         ? record.apiProxy
         : defaults.apiProxy,
-    responseFormatB64Json:
-      record.responseFormatB64Json === true ? true : undefined,
+    responseFormatB64Json: readBooleanOrDefault(
+      record.responseFormatB64Json,
+      defaults.responseFormatB64Json ?? DEFAULT_RESPONSE_FORMAT_B64_JSON
+    ),
     providerDrafts: normalizeProviderDrafts(
       record.providerDrafts,
       customProviderIds
@@ -681,8 +700,10 @@ export function normalizeSettings(
       typeof record.apiProxy === 'boolean'
         ? record.apiProxy
         : DEFAULT_OPENAI_API_PROXY,
-    responseFormatB64Json:
-      record.responseFormatB64Json === true ? true : undefined,
+    responseFormatB64Json: readBooleanOrDefault(
+      record.responseFormatB64Json,
+      DEFAULT_RESPONSE_FORMAT_B64_JSON
+    ),
   })
   const profiles =
     Array.isArray(record.profiles) && record.profiles.length
