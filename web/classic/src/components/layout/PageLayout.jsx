@@ -64,12 +64,12 @@ const PageLayout = () => {
     '/console/image-generation',
     '/console/task',
     '/console/models',
+    '/image-generation',
     '/pricing',
     '/docs',
   ];
 
-  const shouldHideFooter =
-    isImageGenerationRoute || cardProPages.includes(location.pathname);
+  const shouldHideFooter = cardProPages.includes(location.pathname);
 
   const shouldInnerPadding =
     location.pathname.includes('/console') &&
@@ -78,8 +78,7 @@ const PageLayout = () => {
     !isImageGenerationRoute;
 
   const isConsoleRoute = location.pathname.startsWith('/console');
-  const showSider =
-    !isImageGenerationRoute && isConsoleRoute && (!isMobile || drawerOpen);
+  const showSider = isConsoleRoute && (!isMobile || drawerOpen);
 
   useEffect(() => {
     if (isMobile && drawerOpen && collapsed) {
@@ -165,25 +164,23 @@ const PageLayout = () => {
             : 'hidden',
       }}
     >
-      {!isImageGenerationRoute && (
-        <Header
-          style={{
-            padding: 0,
-            height: 'auto',
-            lineHeight: 'normal',
-            position: isDocsRoute ? 'relative' : 'fixed',
-            width: '100%',
-            top: 0,
-            zIndex: 100,
-          }}
-        >
-          <HeaderBar
-            onMobileMenuToggle={() => setDrawerOpen((prev) => !prev)}
-            drawerOpen={drawerOpen}
-            sticky={!isDocsRoute}
-          />
-        </Header>
-      )}
+      <Header
+        style={{
+          padding: 0,
+          height: 'auto',
+          lineHeight: 'normal',
+          position: isDocsRoute ? 'relative' : 'fixed',
+          width: '100%',
+          top: 0,
+          zIndex: 100,
+        }}
+      >
+        <HeaderBar
+          onMobileMenuToggle={() => setDrawerOpen((prev) => !prev)}
+          drawerOpen={drawerOpen}
+          sticky={!isDocsRoute}
+        />
+      </Header>
       <Layout
         style={{
           overflow:

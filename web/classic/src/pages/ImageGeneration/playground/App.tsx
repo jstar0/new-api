@@ -7,21 +7,17 @@ import InputBar from './components/InputBar'
 import Lightbox from './components/Lightbox'
 import MaskEditorModal from './components/MaskEditorModal'
 import SearchBar from './components/SearchBar'
-import SettingsModal from './components/SettingsModal'
-import SupportPromptModal from './components/SupportPromptModal'
 import TaskGrid from './components/TaskGrid'
 import Toast from './components/Toast'
-import { useDockerApiUrlMigrationNotice } from './hooks/useDockerApiUrlMigrationNotice'
-import {
-  buildSettingsFromUrlParams,
-  clearUrlSettingParams,
-  hasUrlSettingParams,
-} from './lib/urlSettings'
 import { initStore } from './store'
 import { useStore } from './store'
+import type { AppSettings } from './types'
 
 const IMAGE_MODEL_PATTERN =
   /image|imagen|dall|gpt-image|flux|jimeng|midjourney|mj|wanx|kolors/i
+const TURBO_PROFILE_ID = 'turboapi-fixed'
+const TURBO_BASE_URL = '/pg'
+const FALLBACK_IMAGE_MODEL = 'gpt-image-2'
 
 async function getUserModels(): Promise<Array<{ label: string; value: string }>> {
   const response = await fetch('/api/user/models', {
@@ -44,59 +40,57 @@ function pickDefaultModel(models: Array<{ value: string }>) {
   )
 }
 
+function applyTurboProfile(settings: AppSettings, model?: string) {
+  const nextModel =
+    model ||
+    settings.model ||
+    settings.profiles.find((profile) => profile.id === settings.activeProfileId)
+      ?.model ||
+    FALLBACK_IMAGE_MODEL
+
+  return {
+    activeProfileId: TURBO_PROFILE_ID,
+    baseUrl: TURBO_BASE_URL,
+    apiKey: '',
+    model: nextModel,
+    apiMode: 'images' as const,
+    codexCli: false,
+    apiProxy: false,
+    customProviders: [],
+    providerOrder: ['openai'],
+    profiles: [
+      {
+        id: TURBO_PROFILE_ID,
+        name: 'TurboAPI',
+        provider: 'openai' as const,
+        baseUrl: TURBO_BASE_URL,
+        apiKey: '',
+        model: nextModel,
+        timeout: settings.timeout,
+        apiMode: 'images' as const,
+        codexCli: false,
+        apiProxy: false,
+      },
+    ],
+  }
+}
+
 export default function App() {
   const setSettings = useStore((s) => s.setSettings)
-  useDockerApiUrlMigrationNotice()
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search)
-    const nextSettings = buildSettingsFromUrlParams(
-      useStore.getState().settings,
-      searchParams
-    )
-
-    setSettings(nextSettings)
-
-    if (hasUrlSettingParams(searchParams)) {
-      clearUrlSettingParams(searchParams)
-
-      const nextSearch = searchParams.toString()
-      const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`
-      window.history.replaceState(null, '', nextUrl)
-    }
-
     initStore()
+    setSettings(applyTurboProfile(useStore.getState().settings))
 
     getUserModels()
       .then((models) => {
         const defaultModel = pickDefaultModel(models)
-        if (!defaultModel) return
-
-        const { settings } = useStore.getState()
-        const profiles = settings.profiles.map((profile) =>
-          profile.id === settings.activeProfileId &&
-          (!profile.model || profile.model === 'gpt-image-2')
-            ? {
-                ...profile,
-                name: 'TurboAPI',
-                baseUrl: '/pg',
-                apiKey: '',
-                model: defaultModel,
-              }
-            : profile
+        setSettings(
+          applyTurboProfile(useStore.getState().settings, defaultModel)
         )
-
-        setSettings({
-          profiles,
-          baseUrl: '/pg',
-          apiKey: '',
-          model:
-            profiles.find((profile) => profile.id === settings.activeProfileId)
-              ?.model ?? defaultModel,
-        })
       })
       .catch(() => {
-        setSettings({ baseUrl: '/pg', apiKey: '' })
+        setSettings(applyTurboProfile(useStore.getState().settings))
       })
   }, [setSettings])
 
@@ -123,9 +117,7 @@ export default function App() {
       <InputBar />
       <DetailModal />
       <Lightbox />
-      <SettingsModal />
       <ConfirmDialog />
-      <SupportPromptModal />
       <Toast />
       <MaskEditorModal />
       <ImageContextMenu />

@@ -563,7 +563,9 @@ export default function InputBar() {
         : normalizeSettings({ ...settings, activeProfileId: activeProfile.id }),
     [activeProfile.id, currentActiveProfile.id, settings]
   )
-  const hasSubmitApiConfig = Boolean(activeProfile.apiKey)
+  const hasSubmitApiConfig = Boolean(
+    activeProfile.apiKey || activeProfile.baseUrl.trim().startsWith('/pg')
+  )
   const canSubmit = Boolean(prompt.trim() && hasSubmitApiConfig)
   const activeProvider = activeProfile.provider
   const isFalProvider = activeProvider === 'fal'

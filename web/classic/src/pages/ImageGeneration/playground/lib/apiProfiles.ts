@@ -872,7 +872,8 @@ export function validateApiProfile(profile: ApiProfile): string | null {
   if (!profile.name.trim()) return '缺少名称'
   if (profile.provider !== 'fal' && !profile.baseUrl.trim())
     return '缺少 API URL'
-  if (!profile.apiKey.trim()) return '缺少 API Key'
+  if (!profile.apiKey.trim() && !profile.baseUrl.trim().startsWith('/pg'))
+    return '缺少 API Key'
   if (!profile.model.trim()) return '缺少模型 ID'
   return null
 }

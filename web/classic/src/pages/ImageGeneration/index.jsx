@@ -13,7 +13,7 @@ import './playground/playground.css';
 
 export default function ImageGeneration() {
   return (
-    <div className='newapi-image-playground min-h-screen bg-slate-50 text-slate-950 dark:bg-zinc-950 dark:text-zinc-50'>
+    <div className='newapi-image-playground min-h-[100dvh] bg-slate-50 pt-16 text-slate-950 dark:bg-zinc-950 dark:text-zinc-50'>
       <ImagePlaygroundApp />
     </div>
   );
