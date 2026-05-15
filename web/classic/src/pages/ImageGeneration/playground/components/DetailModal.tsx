@@ -6,7 +6,7 @@ import { createMaskPreviewDataUrl } from '../lib/canvasImage'
 import {
   copyBlobToClipboard,
   copyTextToClipboard,
-  getClipboardFailureMessage,
+  getClipboardFailureMessage
 } from '../lib/clipboard'
 import { ActualValueBadge, DetailParamValue } from '../lib/paramDisplay'
 import { formatImageRatio } from '../lib/size'
@@ -21,7 +21,7 @@ import {
   updateTaskInStore,
   showCodexCliPrompt,
   getCodexCliPromptKey,
-  retryTask,
+  retryTask
 } from '../store'
 import ViewportTooltip from './ViewportTooltip'
 import {
@@ -30,7 +30,7 @@ import {
   CopyIcon,
   EditIcon,
   LinkIcon,
-  TrashIcon,
+  TrashIcon
 } from './icons'
 
 export default function DetailModal() {
@@ -83,7 +83,7 @@ export default function DetailModal() {
   usePreventBackgroundScroll(Boolean(task), [
     modalRef,
     rawUrlsModalRef,
-    rawResponseModalRef,
+    rawResponseModalRef
   ])
 
   // Reset index when task changes
@@ -119,8 +119,8 @@ export default function DetailModal() {
     const ids = [
       ...new Set([
         ...(task.inputImageIds || []),
-        ...(task.maskImageId ? [task.maskImageId] : []),
-      ]),
+        ...(task.maskImageId ? [task.maskImageId] : [])
+      ])
     ]
     const initial: Record<string, string> = {}
     for (const id of ids) {
@@ -291,7 +291,7 @@ export default function DetailModal() {
       title: '删除记录',
       message:
         '确定要删除这条记录吗？关联的图片资源也会被清理（如果没有其他任务引用）。',
-      action: () => removeTask(task),
+      action: () => removeTask(task)
     })
   }
 
@@ -354,10 +354,10 @@ export default function DetailModal() {
       className='fixed inset-0 z-50 flex items-center justify-center p-4'
       onClick={() => setDetailTaskId(null)}
     >
-      <div className='animate-overlay-in absolute inset-0 bg-black/20 backdrop-blur-md dark:bg-black/40' />
+      <div className='animate-overlay-in absolute inset-0 bg-black/35 dark:bg-black/50' />
       <div
         ref={modalRef}
-        className='animate-modal-in relative z-10 flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-white/50 bg-white/90 shadow-[0_8px_40px_rgb(0,0,0,0.12)] ring-1 ring-black/5 backdrop-blur-xl md:flex-row dark:border-white/[0.08] dark:bg-gray-900/90 dark:shadow-[0_8px_40px_rgb(0,0,0,0.4)] dark:ring-white/10'
+        className='animate-modal-in relative z-10 flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl ring-1 ring-black/5 md:flex-row dark:border-white/[0.08] dark:bg-gray-900 dark:ring-white/10'
         onClick={(e) => e.stopPropagation()}
       >
         <div className='flex h-14 items-center justify-end px-4 md:hidden'>
@@ -373,7 +373,7 @@ export default function DetailModal() {
         {/* 左侧：图片 */}
         <div
           ref={imagePanelRef}
-          className='relative flex h-64 min-h-[16rem] w-full flex-shrink-0 items-center justify-center bg-gray-100 md:h-auto md:w-1/2 dark:bg-black/20'
+          className='relative flex h-64 min-h-[16rem] w-full flex-shrink-0 items-center justify-center bg-gray-100 md:h-auto md:w-1/2 dark:bg-gray-950'
         >
           {task.status === 'done' &&
             outputLen > 0 &&
@@ -399,11 +399,11 @@ export default function DetailModal() {
                         [currentOutputImageId]: formatImageRatio(
                           image.naturalWidth,
                           image.naturalHeight
-                        ),
+                        )
                       }))
                       setImageSizes((prev) => ({
                         ...prev,
-                        [currentOutputImageId]: `${image.naturalWidth}×${image.naturalHeight}`,
+                        [currentOutputImageId]: `${image.naturalWidth}×${image.naturalHeight}`
                       }))
                     }
 
@@ -584,7 +584,7 @@ export default function DetailModal() {
                 style={{
                   display: '-webkit-box',
                   WebkitBoxOrient: 'vertical',
-                  WebkitLineClamp: 4,
+                  WebkitLineClamp: 4
                 }}
               >
                 {task.error || '生成失败'}
@@ -598,7 +598,7 @@ export default function DetailModal() {
                       copyErrorTooltip.handlers.onClick()
                       handleCopyError()
                     }}
-                    className='inline-flex items-center justify-center rounded-full border border-red-200/80 bg-white/80 px-3 py-1.5 text-red-500 transition hover:bg-red-50 dark:border-red-400/20 dark:bg-white/[0.04] dark:hover:bg-red-500/10'
+                    className='inline-flex items-center justify-center rounded-full border border-red-200 bg-white px-3 py-1.5 text-red-500 transition hover:bg-red-50 dark:border-red-400/20 dark:bg-gray-800 dark:hover:bg-red-500/10'
                     aria-label='复制完整报错'
                   >
                     <CopyIcon className='h-4 w-4' />
@@ -675,7 +675,7 @@ export default function DetailModal() {
                       retryTooltip.handlers.onClick()
                       handleRetry()
                     }}
-                    className='inline-flex items-center justify-center rounded-full border border-blue-200/80 bg-white/80 px-3 py-1.5 text-blue-500 transition hover:bg-blue-50 dark:border-blue-400/20 dark:bg-white/[0.04] dark:hover:bg-blue-500/10'
+                    className='inline-flex items-center justify-center rounded-full border border-blue-200 bg-white px-3 py-1.5 text-blue-500 transition hover:bg-blue-50 dark:border-blue-400/20 dark:bg-gray-800 dark:hover:bg-blue-500/10'
                     aria-label='重试任务'
                   >
                     <svg

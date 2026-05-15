@@ -352,3 +352,48 @@
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
   }
 }
+
+.newapi-image-playground .backdrop-blur,
+.newapi-image-playground .backdrop-blur-sm,
+.newapi-image-playground .backdrop-blur-md,
+.newapi-image-playground .backdrop-blur-xl,
+.newapi-image-playground .backdrop-blur-2xl {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.newapi-image-playground .bg-white\/50,
+.newapi-image-playground .bg-white\/60,
+.newapi-image-playground .bg-white\/70,
+.newapi-image-playground .bg-white\/80,
+.newapi-image-playground .bg-white\/90,
+.newapi-image-playground .bg-white\/95 {
+  background-color: #ffffff !important;
+}
+
+.newapi-image-playground .bg-gray-50\/50,
+.newapi-image-playground .bg-gray-50\/80,
+.newapi-image-playground .bg-gray-100\/50,
+.newapi-image-playground .bg-gray-100\/80 {
+  background-color: #f8fafc !important;
+}
+
+.newapi-image-playground .border-white\/50 {
+  border-color: #e5e7eb !important;
+}
+
+.dark .newapi-image-playground .dark\:bg-gray-900\/70,
+.dark .newapi-image-playground .dark\:bg-gray-900\/90,
+.dark .newapi-image-playground .dark\:bg-gray-900\/95,
+.dark .newapi-image-playground .dark\:bg-gray-950\/90 {
+  background-color: #111827 !important;
+}
+
+.dark .newapi-image-playground .dark\:bg-white\/\[0\.02\],
+.dark .newapi-image-playground .dark\:bg-white\/\[0\.03\],
+.dark .newapi-image-playground .dark\:bg-white\/\[0\.04\],
+.dark .newapi-image-playground .dark\:bg-white\/\[0\.05\],
+.dark .newapi-image-playground .dark\:bg-white\/\[0\.06\],
+.dark .newapi-image-playground .dark\:bg-white\/\[0\.08\] {
+  background-color: #1f2937 !important;
+}

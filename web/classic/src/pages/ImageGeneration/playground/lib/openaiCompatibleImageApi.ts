@@ -6,17 +6,17 @@ import type {
   CustomProviderSubmitMapping,
   ImageApiResponse,
   ResponsesApiResponse,
-  TaskParams,
+  TaskParams
 } from '../types'
 import {
   dataUrlToBlob,
   imageDataUrlToPngBlob,
-  maskDataUrlToPngBlob,
+  maskDataUrlToPngBlob
 } from './canvasImage'
 import {
   buildApiUrl,
   readClientDevProxyConfig,
-  shouldUseApiProxy,
+  shouldUseApiProxy
 } from './devProxy'
 import {
   assertImageInputPayloadSize,
@@ -32,7 +32,7 @@ import {
   mergeActualParams,
   MIME_MAP,
   normalizeBase64Image,
-  pickActualParams,
+  pickActualParams
 } from './imageApiShared'
 
 const PROMPT_REWRITE_GUARD_PREFIX =
@@ -48,7 +48,7 @@ function appendQuery(path: string, query?: Record<string, string>): string {
 function createOpenAICompatiblePaths() {
   return {
     generationPath: 'images/generations',
-    editPath: 'images/edits',
+    editPath: 'images/edits'
   }
 }
 
@@ -97,12 +97,39 @@ function getAllByPath(source: unknown, path: string | undefined): unknown[] {
     .filter((item) => item != null)
 }
 
-function createRequestHeaders(profile: ApiProfile): Record<string, string> {
-  if (!profile.apiKey.trim() || profile.baseUrl.trim().startsWith('/pg'))
+function isNewApiPlaygroundBaseUrl(baseUrl: string): boolean {
+  const normalizedBaseUrl = baseUrl.trim()
+  return normalizedBaseUrl === '/pg' || normalizedBaseUrl.startsWith('/pg/')
+}
+
+function createNewApiPlaygroundHeaders(
+  profile: ApiProfile
+): Record<string, string> {
+  if (!isNewApiPlaygroundBaseUrl(profile.baseUrl)) return {}
+
+  try {
+    const userText = window.localStorage.getItem('user')
+    if (!userText) return {}
+
+    const user = JSON.parse(userText) as { id?: number | string }
+    if (user.id == null || user.id === '') return {}
+
+    return {
+      'New-Api-User': String(user.id)
+    }
+  } catch {
     return {}
+  }
+}
+
+function createRequestHeaders(profile: ApiProfile): Record<string, string> {
+  const playgroundHeaders = createNewApiPlaygroundHeaders(profile)
+  if (!profile.apiKey.trim() || isNewApiPlaygroundBaseUrl(profile.baseUrl))
+    return playgroundHeaders
 
   return {
-    Authorization: `Bearer ${profile.apiKey}`,
+    ...playgroundHeaders,
+    Authorization: `Bearer ${profile.apiKey}`
   }
 }
 
@@ -116,7 +143,7 @@ function createResponsesImageTool(
     type: 'image_generation',
     action: isEdit ? 'edit' : 'generate',
     size: params.size,
-    output_format: params.output_format,
+    output_format: params.output_format
   }
 
   if (!profile.codexCli) {
@@ -129,7 +156,7 @@ function createResponsesImageTool(
 
   if (maskDataUrl) {
     tool.input_image_mask = {
-      image_url: maskDataUrl,
+      image_url: maskDataUrl
     }
   }
 
@@ -150,10 +177,10 @@ function createResponsesInput(
         { type: 'input_text', text },
         ...inputImageDataUrls.map((dataUrl) => ({
           type: 'input_image',
-          image_url: dataUrl,
-        })),
-      ],
-    },
+          image_url: dataUrl
+        }))
+      ]
+    }
   ]
 }
 
@@ -189,7 +216,7 @@ function parseResponsesImageResults(
         revisedPrompt:
           typeof item.revised_prompt === 'string'
             ? item.revised_prompt
-            : undefined,
+            : undefined
       })
     }
   }
@@ -265,7 +292,7 @@ async function parseImagesApiResponse(
     actualParams,
     actualParamsList: images.map(() => actualParams),
     revisedPrompts,
-    ...(rawImageUrls.length ? { rawImageUrls } : {}),
+    ...(rawImageUrls.length ? { rawImageUrls } : {})
   }
 }
 
@@ -302,7 +329,7 @@ async function callImagesApiConcurrent(
 ): Promise<CallApiResult> {
   const singleOpts = {
     ...opts,
-    params: { ...opts.params, n: 1, quality: 'auto' as const },
+    params: { ...opts.params, n: 1, quality: 'auto' as const }
   }
   const results = await Promise.allSettled(
     Array.from({ length: n }).map(() =>
@@ -345,7 +372,7 @@ async function callImagesApiConcurrent(
     actualParams,
     actualParamsList,
     revisedPrompts,
-    ...(rawImageUrls.length ? { rawImageUrls } : {}),
+    ...(rawImageUrls.length ? { rawImageUrls } : {})
   }
 }
 
@@ -432,7 +459,7 @@ async function callImagesApiSingle(
           headers: requestHeaders,
           cache: 'no-store',
           body: formData,
-          signal: controller.signal,
+          signal: controller.signal
         }
       )
     } else {
@@ -442,7 +469,7 @@ async function callImagesApiSingle(
         prompt,
         size: params.size,
         output_format: params.output_format,
-        moderation: params.moderation,
+        moderation: params.moderation
       }
 
       if (!profile.codexCli) {
@@ -470,11 +497,11 @@ async function callImagesApiSingle(
           method: 'POST',
           headers: {
             ...requestHeaders,
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
           cache: 'no-store',
           body: JSON.stringify(body),
-          signal: controller.signal,
+          signal: controller.signal
         }
       )
     }
@@ -583,11 +610,11 @@ function createCustomProviderContext(
       dataUrls: opts.inputImageDataUrls.length
         ? opts.inputImageDataUrls
         : undefined,
-      count: opts.inputImageDataUrls.length,
+      count: opts.inputImageDataUrls.length
     },
     mask: {
-      dataUrl: opts.maskDataUrl,
-    },
+      dataUrl: opts.maskDataUrl
+    }
   }
 }
 
@@ -758,7 +785,7 @@ async function submitCustomRequest(
       headers,
       cache: 'no-store',
       body,
-      signal: controller.signal,
+      signal: controller.signal
     }
   )
 
@@ -797,7 +824,7 @@ async function pollCustomTaskResult(
           method: poll.method ?? 'GET',
           headers: requestHeaders,
           cache: 'no-store',
-          signal,
+          signal
         }
       )
 
@@ -961,7 +988,7 @@ async function callResponsesImageApi(
     actualParams,
     actualParamsList,
     revisedPrompts,
-    ...(rawImageUrls.length ? { rawImageUrls } : {}),
+    ...(rawImageUrls.length ? { rawImageUrls } : {})
   }
 }
 
@@ -1005,9 +1032,9 @@ async function callResponsesImageApiSingle(
           inputImageDataUrls.length > 0,
           profile,
           opts.maskDataUrl
-        ),
+        )
       ],
-      tool_choice: 'required',
+      tool_choice: 'required'
     }
 
     const response = await fetch(
@@ -1016,11 +1043,11 @@ async function callResponsesImageApiSingle(
         method: 'POST',
         headers: {
           ...requestHeaders,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         cache: 'no-store',
         body: JSON.stringify(body),
-        signal: controller.signal,
+        signal: controller.signal
       }
     )
 
@@ -1037,7 +1064,7 @@ async function callResponsesImageApiSingle(
       actualParamsList: imageResults.map((result) =>
         mergeActualParams(result.actualParams ?? {})
       ),
-      revisedPrompts: imageResults.map((result) => result.revisedPrompt),
+      revisedPrompts: imageResults.map((result) => result.revisedPrompt)
     }
   } finally {
     clearTimeout(timeoutId)

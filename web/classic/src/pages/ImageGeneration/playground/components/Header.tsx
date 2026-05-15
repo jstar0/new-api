@@ -9,7 +9,7 @@ export default function Header() {
   return (
     <header
       data-no-drag-select
-      className='safe-area-top sticky top-16 z-30 border-b border-gray-200 bg-white/90 backdrop-blur dark:border-white/[0.08] dark:bg-gray-950/90'
+      className='safe-area-top sticky top-16 z-30 border-b border-gray-200 bg-white shadow-sm dark:border-white/[0.08] dark:bg-gray-950'
     >
       <div className='safe-area-x mx-auto flex h-14 max-w-7xl items-center justify-between gap-3'>
         <div className='min-w-0'>
@@ -31,7 +31,7 @@ export default function Header() {
             <button
               type='button'
               onClick={() => setShowSettings(true)}
-              className='flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-300 dark:hover:border-sky-500/30 dark:hover:bg-sky-500/10 dark:hover:text-sky-200'
+              className='flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 dark:border-white/[0.08] dark:bg-gray-900 dark:text-gray-300 dark:hover:border-sky-500/30 dark:hover:bg-sky-500/10 dark:hover:text-sky-200'
               aria-label='连接设置'
             >
               <svg
