@@ -50,6 +50,9 @@ const PageLayout = () => {
   const { i18n } = useTranslation();
   const location = useLocation();
   const isDocsRoute = location.pathname === '/docs';
+  const isImageGenerationRoute =
+    location.pathname === '/image-generation' ||
+    location.pathname === '/console/image-generation';
 
   const cardProPages = [
     '/console/channel',
@@ -65,15 +68,18 @@ const PageLayout = () => {
     '/docs',
   ];
 
-  const shouldHideFooter = cardProPages.includes(location.pathname);
+  const shouldHideFooter =
+    isImageGenerationRoute || cardProPages.includes(location.pathname);
 
   const shouldInnerPadding =
     location.pathname.includes('/console') &&
     !location.pathname.startsWith('/console/chat') &&
-    location.pathname !== '/console/playground';
+    location.pathname !== '/console/playground' &&
+    !isImageGenerationRoute;
 
   const isConsoleRoute = location.pathname.startsWith('/console');
-  const showSider = isConsoleRoute && (!isMobile || drawerOpen);
+  const showSider =
+    !isImageGenerationRoute && isConsoleRoute && (!isMobile || drawerOpen);
 
   useEffect(() => {
     if (isMobile && drawerOpen && collapsed) {
@@ -153,29 +159,37 @@ const PageLayout = () => {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        overflow: isDocsRoute || isMobile ? 'visible' : 'hidden',
+        overflow:
+          isImageGenerationRoute || isDocsRoute || isMobile
+            ? 'visible'
+            : 'hidden',
       }}
     >
-      <Header
-        style={{
-          padding: 0,
-          height: 'auto',
-          lineHeight: 'normal',
-          position: isDocsRoute ? 'relative' : 'fixed',
-          width: '100%',
-          top: 0,
-          zIndex: 100,
-        }}
-      >
-        <HeaderBar
-          onMobileMenuToggle={() => setDrawerOpen((prev) => !prev)}
-          drawerOpen={drawerOpen}
-          sticky={!isDocsRoute}
-        />
-      </Header>
+      {!isImageGenerationRoute && (
+        <Header
+          style={{
+            padding: 0,
+            height: 'auto',
+            lineHeight: 'normal',
+            position: isDocsRoute ? 'relative' : 'fixed',
+            width: '100%',
+            top: 0,
+            zIndex: 100,
+          }}
+        >
+          <HeaderBar
+            onMobileMenuToggle={() => setDrawerOpen((prev) => !prev)}
+            drawerOpen={drawerOpen}
+            sticky={!isDocsRoute}
+          />
+        </Header>
+      )}
       <Layout
         style={{
-          overflow: isDocsRoute || isMobile ? 'visible' : 'auto',
+          overflow:
+            isImageGenerationRoute || isDocsRoute || isMobile
+              ? 'visible'
+              : 'auto',
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -215,7 +229,10 @@ const PageLayout = () => {
           <Content
             style={{
               flex: '1 0 auto',
-              overflowY: isDocsRoute || isMobile ? 'visible' : 'hidden',
+              overflowY:
+                isImageGenerationRoute || isDocsRoute || isMobile
+                  ? 'visible'
+                  : 'hidden',
               WebkitOverflowScrolling: 'touch',
               padding: shouldInnerPadding ? (isMobile ? '5px' : '24px') : '0',
               position: 'relative',

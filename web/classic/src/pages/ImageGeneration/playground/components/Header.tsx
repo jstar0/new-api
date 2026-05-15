@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTooltip } from '../hooks/useTooltip'
 import { dismissAllTooltips } from '../lib/tooltipDismiss'
 import { useStore } from '../store'
+import { useVersionCheck } from '../hooks/useVersionCheck'
 import HelpModal from './HelpModal'
 import ViewportTooltip from './ViewportTooltip'
 
@@ -21,6 +22,7 @@ function isInstalledPwa() {
 export default function Header() {
   const setShowSettings = useStore((s) => s.setShowSettings)
   const setConfirmDialog = useStore((s) => s.setConfirmDialog)
+  const { hasUpdate, latestRelease, dismiss } = useVersionCheck()
   const [showHelp, setShowHelp] = useState(false)
   const [installPrompt, setInstallPrompt] =
     useState<BeforeInstallPromptEvent | null>(null)
@@ -98,14 +100,31 @@ export default function Header() {
     <>
       <header
         data-no-drag-select
-        className='safe-area-top sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur dark:border-white/[0.08] dark:bg-gray-950/80'
+        className='safe-area-top fixed left-0 right-0 top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur dark:border-white/[0.08] dark:bg-gray-950/80'
       >
         <div className='safe-area-x safe-header-inner mx-auto flex max-w-7xl items-center justify-between'>
           <div className='min-w-0 flex-1 pr-2'>
             <h1 className='relative inline-flex items-start'>
-              <span className='text-[17px] font-bold tracking-tight text-gray-800 sm:text-lg dark:text-gray-100'>
-                TurboAPI 图片工作台
-              </span>
+              <a
+                href='https://github.com/CookSleep/gpt_image_playground'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-[17px] font-bold tracking-tight text-gray-800 transition-colors hover:text-gray-600 sm:text-lg dark:text-gray-100 dark:hover:text-gray-300'
+              >
+                GPT Image Playground
+              </a>
+              {hasUpdate && latestRelease && (
+                <a
+                  href={latestRelease.url}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  onClick={dismiss}
+                  className='absolute -right-1 -top-1 translate-x-full -translate-y-1/4 rounded-[4px] border border-red-500/30 bg-red-500 px-1 py-0.5 text-[9px] font-black leading-none text-white shadow-sm transition-all animate-fade-in hover:bg-red-600'
+                  title={`新版本 ${latestRelease.tag}`}
+                >
+                  NEW
+                </a>
+              )}
             </h1>
           </div>
           <div className='flex shrink-0 items-center gap-1'>
@@ -207,6 +226,9 @@ export default function Header() {
           </div>
         </div>
       </header>
+      <div className='safe-area-top invisible pointer-events-none' aria-hidden='true'>
+        <div className='safe-header-inner' />
+      </div>
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
     </>
   )
