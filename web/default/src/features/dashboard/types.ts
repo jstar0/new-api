@@ -26,6 +26,14 @@ export interface UsageLeaderboardItem {
 }
 
 export type UsageLeaderboardPeriod = 'day' | 'week' | 'month'
+export type UsageLeaderboardMetric = 'quota' | 'requests'
+
+export interface LeaderboardSettings {
+  topup_enabled: boolean
+  aff_enabled: boolean
+  usage_enabled: boolean
+  usage_metric: UsageLeaderboardMetric
+}
 
 export type UsageRewardType = 'percent' | 'fixed_quota'
 

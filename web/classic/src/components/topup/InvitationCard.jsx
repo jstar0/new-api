@@ -57,6 +57,12 @@ const InvitationCard = ({
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [topUpLeaderboard, setTopUpLeaderboard] = useState([]);
   const [topUpLeaderboardLoading, setTopUpLeaderboardLoading] = useState(false);
+  const [leaderboardSettings, setLeaderboardSettings] = useState({
+    topup_enabled: true,
+    aff_enabled: true,
+    usage_enabled: true,
+    usage_metric: 'quota',
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -104,18 +110,78 @@ const InvitationCard = ({
       }
     };
 
-    loadLeaderboard();
-    loadTopUpLeaderboard();
-    const leaderboardTimer = window.setInterval(() => {
-      loadLeaderboard(false);
-    }, LEADERBOARD_REFRESH_INTERVAL);
-    const topUpLeaderboardTimer = window.setInterval(() => {
-      loadTopUpLeaderboard(false);
-    }, LEADERBOARD_REFRESH_INTERVAL);
+    const loadLeaderboardSettings = async () => {
+      try {
+        const res = await API.get('/api/user/leaderboard/setting', {
+          skipErrorHandler: true,
+        });
+        if (!mounted || !res?.data?.success) {
+          loadLeaderboard();
+          loadTopUpLeaderboard();
+          return {
+            topup_enabled: true,
+            aff_enabled: true,
+            usage_enabled: true,
+            usage_metric: 'quota',
+          };
+        }
+        const settings = {
+          topup_enabled: res.data.data?.topup_enabled !== false,
+          aff_enabled: res.data.data?.aff_enabled !== false,
+          usage_enabled: res.data.data?.usage_enabled !== false,
+          usage_metric:
+            res.data.data?.usage_metric === 'requests' ? 'requests' : 'quota',
+        };
+        setLeaderboardSettings(settings);
+        if (settings.aff_enabled) {
+          loadLeaderboard();
+        }
+        if (settings.topup_enabled) {
+          loadTopUpLeaderboard();
+        }
+        return settings;
+      } catch (error) {
+        loadLeaderboard();
+        loadTopUpLeaderboard();
+        return {
+          topup_enabled: true,
+          aff_enabled: true,
+          usage_enabled: true,
+          usage_metric: 'quota',
+        };
+      }
+    };
+
+    let leaderboardTimer = null;
+    let topUpLeaderboardTimer = null;
+
+    const startTimers = (settings) => {
+      if (settings.aff_enabled) {
+        leaderboardTimer = window.setInterval(() => {
+          loadLeaderboard(false);
+        }, LEADERBOARD_REFRESH_INTERVAL);
+      }
+      if (settings.topup_enabled) {
+        topUpLeaderboardTimer = window.setInterval(() => {
+          loadTopUpLeaderboard(false);
+        }, LEADERBOARD_REFRESH_INTERVAL);
+      }
+    };
+
+    loadLeaderboardSettings().then((settings) => {
+      if (!mounted) {
+        return;
+      }
+      startTimers(settings);
+    });
     return () => {
       mounted = false;
-      window.clearInterval(leaderboardTimer);
-      window.clearInterval(topUpLeaderboardTimer);
+      if (leaderboardTimer) {
+        window.clearInterval(leaderboardTimer);
+      }
+      if (topUpLeaderboardTimer) {
+        window.clearInterval(topUpLeaderboardTimer);
+      }
     };
   }, []);
 
@@ -347,55 +413,57 @@ const InvitationCard = ({
           />
         </Card>
 
-        {/* 充值排行榜 */}
-        <Card
-          className='!rounded-xl w-full'
-          title={
-            <div className='flex items-center gap-2'>
-              <CreditCard size={16} />
-              <Text type='tertiary'>{t('充值排行榜')}</Text>
-              <Tag color='white' shape='circle'>
-                {t('每15分钟更新')}
-              </Tag>
-            </div>
-          }
-        >
-          <Table
-            size='small'
-            columns={topUpLeaderboardColumns}
-            dataSource={topUpLeaderboard}
-            rowKey='rank'
-            loading={topUpLeaderboardLoading}
-            pagination={false}
-            empty={t('暂无排行数据')}
-            scroll={{ x: 420 }}
-          />
-        </Card>
+        {leaderboardSettings.topup_enabled && (
+          <Card
+            className='!rounded-xl w-full'
+            title={
+              <div className='flex items-center gap-2'>
+                <CreditCard size={16} />
+                <Text type='tertiary'>{t('充值排行榜')}</Text>
+                <Tag color='white' shape='circle'>
+                  {t('每15分钟更新')}
+                </Tag>
+              </div>
+            }
+          >
+            <Table
+              size='small'
+              columns={topUpLeaderboardColumns}
+              dataSource={topUpLeaderboard}
+              rowKey='rank'
+              loading={topUpLeaderboardLoading}
+              pagination={false}
+              empty={t('暂无排行数据')}
+              scroll={{ x: 420 }}
+            />
+          </Card>
+        )}
 
-        {/* 邀请排行榜 */}
-        <Card
-          className='!rounded-xl w-full'
-          title={
-            <div className='flex items-center gap-2'>
-              <Trophy size={16} />
-              <Text type='tertiary'>{t('邀请排行榜')}</Text>
-              <Tag color='white' shape='circle'>
-                {t('每15分钟更新')}
-              </Tag>
-            </div>
-          }
-        >
-          <Table
-            size='small'
-            columns={leaderboardColumns}
-            dataSource={leaderboard}
-            rowKey='rank'
-            loading={leaderboardLoading}
-            pagination={false}
-            empty={t('暂无排行数据')}
-            scroll={{ x: 520 }}
-          />
-        </Card>
+        {leaderboardSettings.aff_enabled && (
+          <Card
+            className='!rounded-xl w-full'
+            title={
+              <div className='flex items-center gap-2'>
+                <Trophy size={16} />
+                <Text type='tertiary'>{t('邀请排行榜')}</Text>
+                <Tag color='white' shape='circle'>
+                  {t('每15分钟更新')}
+                </Tag>
+              </div>
+            }
+          >
+            <Table
+              size='small'
+              columns={leaderboardColumns}
+              dataSource={leaderboard}
+              rowKey='rank'
+              loading={leaderboardLoading}
+              pagination={false}
+              empty={t('暂无排行数据')}
+              scroll={{ x: 520 }}
+            />
+          </Card>
+        )}
 
         {/* 奖励说明 */}
         <Card

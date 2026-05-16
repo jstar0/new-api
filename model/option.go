@@ -135,6 +135,7 @@ func InitOptionMap() {
 	common.OptionMap["QuotaForNewUser"] = strconv.Itoa(common.QuotaForNewUser)
 	common.OptionMap["QuotaForInviter"] = strconv.Itoa(common.QuotaForInviter)
 	common.OptionMap["QuotaForInvitee"] = strconv.Itoa(common.QuotaForInvitee)
+	common.OptionMap[LeaderboardSettingOptionKey] = DefaultLeaderboardSettingsJSONString()
 	common.OptionMap[UsageRewardSettingOptionKey] = DefaultUsageRewardSettingsJSONString()
 	common.OptionMap["QuotaRemindThreshold"] = strconv.Itoa(common.QuotaRemindThreshold)
 	common.OptionMap["PreConsumedQuota"] = strconv.Itoa(common.PreConsumedQuota)

@@ -13,6 +13,9 @@ import type {
   AffiliateCodeResponse,
   AffiliateTransferResponse,
   UsageRewardsResponse,
+  LeaderboardSettingsResponse,
+  TopUpLeaderboardResponse,
+  AffiliateLeaderboardResponse,
   BillingHistoryResponse,
   CompleteOrderRequest,
   CreemPaymentRequest,
@@ -176,6 +179,29 @@ export async function getUsageRewards(
   limit = 10
 ): Promise<UsageRewardsResponse> {
   const res = await api.get(`/api/user/usage/rewards?limit=${limit}`)
+  return res.data
+}
+
+export async function getLeaderboardSetting(): Promise<LeaderboardSettingsResponse> {
+  const res = await api.get('/api/user/leaderboard/setting')
+  return res.data
+}
+
+export async function getTopUpLeaderboard(
+  limit = 10
+): Promise<TopUpLeaderboardResponse> {
+  const res = await api.get(`/api/user/topup/leaderboard?limit=${limit}`, {
+    skipBusinessError: true,
+  } as Record<string, unknown>)
+  return res.data
+}
+
+export async function getAffiliateLeaderboard(
+  limit = 10
+): Promise<AffiliateLeaderboardResponse> {
+  const res = await api.get(`/api/user/aff/leaderboard?limit=${limit}`, {
+    skipBusinessError: true,
+  } as Record<string, unknown>)
   return res.data
 }
 

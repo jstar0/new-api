@@ -3,7 +3,9 @@ import type {
   QuotaDataItem,
   UptimeGroupResult,
   UsageLeaderboardItem,
+  LeaderboardSettings,
   UsageLeaderboardPeriod,
+  UsageLeaderboardMetric,
   UsageRewardSettings,
 } from './types'
 
@@ -51,14 +53,23 @@ export async function getUserQuotaDataByUsers(params: {
 
 export async function getUsageLeaderboard(
   limit = 10,
-  period: UsageLeaderboardPeriod = 'day'
+  period: UsageLeaderboardPeriod = 'day',
+  metric?: UsageLeaderboardMetric
 ) {
   const res = await api.get<{
     success: boolean
     data: UsageLeaderboardItem[]
   }>('/api/user/usage/leaderboard', {
-    params: { limit, period },
+    params: { limit, period, metric },
   })
+  return res.data
+}
+
+export async function getLeaderboardSetting() {
+  const res = await api.get<{
+    success: boolean
+    data: LeaderboardSettings
+  }>('/api/user/leaderboard/setting')
   return res.data
 }
 

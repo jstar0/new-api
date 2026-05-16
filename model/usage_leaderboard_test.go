@@ -166,3 +166,64 @@ func TestGetUsageLeaderboardFiltersByPeriod(t *testing.T) {
 	require.Len(t, allLeaderboard, 4)
 	assert.EqualValues(t, 6000, allLeaderboard[0].ConsumeTokens)
 }
+
+func TestGetUsageLeaderboardCanRankByRequests(t *testing.T) {
+	truncateTables(t)
+
+	insertAffLeaderboardUser(t, &User{Id: 1, Username: "quota-heavy"})
+	insertAffLeaderboardUser(t, &User{Id: 2, Username: "request-heavy"})
+	insertAffLeaderboardUser(t, &User{Id: 3, Username: "free-model-user"})
+
+	logs := []Log{
+		{
+			UserId:           1,
+			Username:         "quota-heavy",
+			Type:             LogTypeConsume,
+			PromptTokens:     100,
+			CompletionTokens: 100,
+			Quota:            1000,
+			CreatedAt:        100,
+		},
+		{
+			UserId:           2,
+			Username:         "request-heavy",
+			Type:             LogTypeConsume,
+			PromptTokens:     50,
+			CompletionTokens: 50,
+			Quota:            10,
+			CreatedAt:        110,
+		},
+		{
+			UserId:           2,
+			Username:         "request-heavy",
+			Type:             LogTypeConsume,
+			PromptTokens:     50,
+			CompletionTokens: 50,
+			Quota:            10,
+			CreatedAt:        120,
+		},
+		{
+			UserId:           3,
+			Username:         "free-model-user",
+			Type:             LogTypeConsume,
+			PromptTokens:     50,
+			CompletionTokens: 50,
+			Quota:            0,
+			CreatedAt:        130,
+		},
+	}
+	require.NoError(t, LOG_DB.Create(&logs).Error)
+
+	quotaLeaderboard, err := GetUsageLeaderboard(10, "all")
+	require.NoError(t, err)
+	require.Len(t, quotaLeaderboard, 2)
+	assert.Equal(t, "quota-heavy", quotaLeaderboard[0].DisplayName)
+
+	requestLeaderboard, err := GetUsageLeaderboardByMetric(10, "all", UsageLeaderboardMetricRequests)
+	require.NoError(t, err)
+	require.Len(t, requestLeaderboard, 3)
+	assert.Equal(t, "request-heavy", requestLeaderboard[0].DisplayName)
+	assert.EqualValues(t, 2, requestLeaderboard[0].RequestCount)
+	assert.Equal(t, "free-model-user", requestLeaderboard[2].DisplayName)
+	assert.EqualValues(t, 1, requestLeaderboard[2].RequestCount)
+}

@@ -93,6 +93,7 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.GET("/topup/leaderboard", controller.GetTopUpLeaderboard)
 				selfRoute.GET("/usage/leaderboard", controller.GetUsageLeaderboard)
 				selfRoute.GET("/usage/reward-setting", controller.GetUsageRewardSetting)
+				selfRoute.GET("/leaderboard/setting", controller.GetLeaderboardSetting)
 				selfRoute.GET("/usage/rewards", controller.GetUsageRewards)
 				selfRoute.GET("/aff", controller.GetAffCode)
 				selfRoute.GET("/topup/info", controller.GetTopUpInfo)

@@ -14,11 +14,14 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  getLeaderboardSetting,
   getUsageLeaderboard,
   getUsageRewardSetting,
 } from '@/features/dashboard/api'
 import type {
+  LeaderboardSettings,
   UsageLeaderboardItem,
+  UsageLeaderboardMetric,
   UsageLeaderboardPeriod,
   UsageRewardRule,
   UsageRewardSettings,
@@ -70,6 +73,13 @@ const DEFAULT_USAGE_REWARD_SETTINGS: UsageRewardSettings = {
       fixed_quota: 0,
     },
   ],
+}
+
+const DEFAULT_LEADERBOARD_SETTINGS: LeaderboardSettings = {
+  topup_enabled: true,
+  aff_enabled: true,
+  usage_enabled: true,
+  usage_metric: 'quota',
 }
 
 function getRankClassName(rank: number): string {
@@ -136,6 +146,20 @@ function normalizeUsageRewardSettings(
   }
 }
 
+function normalizeLeaderboardSettings(
+  settings?: LeaderboardSettings
+): LeaderboardSettings {
+  if (!settings) return DEFAULT_LEADERBOARD_SETTINGS
+  return {
+    topup_enabled:
+      settings.topup_enabled ?? DEFAULT_LEADERBOARD_SETTINGS.topup_enabled,
+    aff_enabled: settings.aff_enabled ?? DEFAULT_LEADERBOARD_SETTINGS.aff_enabled,
+    usage_enabled:
+      settings.usage_enabled ?? DEFAULT_LEADERBOARD_SETTINGS.usage_enabled,
+    usage_metric: settings.usage_metric === 'requests' ? 'requests' : 'quota',
+  }
+}
+
 function getUsageRewardRule(
   rank: number,
   settings: UsageRewardSettings
@@ -184,6 +208,18 @@ function getUsageRewardDescription(settings: UsageRewardSettings): string {
 export function UsageLeaderboardPanel() {
   const { t } = useTranslation()
   const [period, setPeriod] = useState<UsageLeaderboardPeriod>('day')
+  const leaderboardSettingQuery = useQuery({
+    queryKey: ['dashboard', 'overview', 'leaderboard-setting'],
+    queryFn: getLeaderboardSetting,
+    refetchInterval: USAGE_LEADERBOARD_REFRESH_INTERVAL,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    staleTime: USAGE_LEADERBOARD_REFRESH_INTERVAL,
+  })
+  const leaderboardSettings = normalizeLeaderboardSettings(
+    leaderboardSettingQuery.data?.data
+  )
+  const usageMetric: UsageLeaderboardMetric = leaderboardSettings.usage_metric
   const usageRewardSettingQuery = useQuery({
     queryKey: ['dashboard', 'overview', 'usage-reward-setting'],
     queryFn: getUsageRewardSetting,
@@ -205,9 +241,11 @@ export function UsageLeaderboardPanel() {
       'overview',
       'usage-leaderboard',
       period,
+      usageMetric,
       leaderboardLimit,
     ],
-    queryFn: () => getUsageLeaderboard(leaderboardLimit, period),
+    queryFn: () => getUsageLeaderboard(leaderboardLimit, period, usageMetric),
+    enabled: leaderboardSettings.usage_enabled,
     refetchInterval: USAGE_LEADERBOARD_REFRESH_INTERVAL,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
@@ -222,6 +260,11 @@ export function UsageLeaderboardPanel() {
   const tableItems = items.filter(
     (item) => item.rank > 3 && !podiumItemKeys.has(getLeaderboardItemKey(item))
   )
+  const isRequestMetric = usageMetric === 'requests'
+
+  if (!leaderboardSettings.usage_enabled) {
+    return null
+  }
 
   return (
     <PanelWrapper
@@ -233,7 +276,9 @@ export function UsageLeaderboardPanel() {
       }
       description={t(getUsageRewardDescription(rewardSettings))}
       loading={
-        usageLeaderboardQuery.isLoading || usageRewardSettingQuery.isLoading
+        usageLeaderboardQuery.isLoading ||
+        usageRewardSettingQuery.isLoading ||
+        leaderboardSettingQuery.isLoading
       }
       empty={!usageLeaderboardQuery.isLoading && items.length === 0}
       emptyMessage={t('No usage records yet')}
@@ -300,10 +345,12 @@ export function UsageLeaderboardPanel() {
                     meta.valueClassName
                   )}
                 >
-                  {formatQuota(item.consume_quota)}
+                  {isRequestMetric
+                    ? formatNumber(item.request_count)
+                    : formatQuota(item.consume_quota)}
                 </div>
                 <div className='text-muted-foreground text-xs'>
-                  {t('Consumed Quota')}
+                  {isRequestMetric ? t('Request Count') : t('Consumed Quota')}
                 </div>
               </div>
             )
@@ -317,7 +364,7 @@ export function UsageLeaderboardPanel() {
               <TableHead className='w-16'>{t('Rank')}</TableHead>
               <TableHead>{t('User')}</TableHead>
               <TableHead className='text-right'>
-                {t('Consumed Quota')}
+                {isRequestMetric ? t('Request Count') : t('Consumed Quota')}
               </TableHead>
               <TableHead className='text-right'>{t('日榜奖励')}</TableHead>
               <TableHead className='hidden text-right md:table-cell'>
@@ -344,7 +391,9 @@ export function UsageLeaderboardPanel() {
                   </div>
                 </TableCell>
                 <TableCell className='text-right font-medium tabular-nums'>
-                  {formatQuota(item.consume_quota)}
+                  {isRequestMetric
+                    ? formatNumber(item.request_count)
+                    : formatQuota(item.consume_quota)}
                 </TableCell>
                 <TableCell className='text-right font-medium'>
                   {getUsageRewardText(item.rank, period, rewardSettings)}

@@ -159,6 +159,7 @@ export type BillingSettings = {
   PreConsumedQuota: number
   QuotaForInviter: number
   QuotaForInvitee: number
+  'leaderboard_setting.config': string
   'usage_reward_setting.config': string
   TopUpLink: string
   'general_setting.docs_link': string

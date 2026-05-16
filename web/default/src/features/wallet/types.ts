@@ -24,6 +24,10 @@ export type StripePaymentResponse = ApiResponse<{ pay_link: string }>
 export type AffiliateCodeResponse = ApiResponse<string>
 export type AffiliateTransferResponse = ApiResponse
 export type UsageRewardsResponse = ApiResponse<UsageRewardRecord[]>
+export type UsageLeaderboardMetric = 'quota' | 'requests'
+export type LeaderboardSettingsResponse = ApiResponse<LeaderboardSettings>
+export type TopUpLeaderboardResponse = ApiResponse<TopUpLeaderboardItem[]>
+export type AffiliateLeaderboardResponse = ApiResponse<AffiliateLeaderboardItem[]>
 export type CreemPaymentResponse = ApiResponse<{ checkout_url: string }>
 export type WaffoPaymentResponse = ApiResponse<
   { payment_url?: string } | string
@@ -128,6 +132,30 @@ export interface TopupInfo {
   enable_waffo_pancake_topup?: boolean
   /** Minimum topup amount for Waffo Pancake */
   waffo_pancake_min_topup?: number
+}
+
+export interface LeaderboardSettings {
+  topup_enabled: boolean
+  aff_enabled: boolean
+  usage_enabled: boolean
+  usage_metric: UsageLeaderboardMetric
+}
+
+export interface TopUpLeaderboardItem {
+  rank: number
+  display_name: string
+  recharge_count: number
+  recharge_quota: number
+  latest_recharge_time: number
+}
+
+export interface AffiliateLeaderboardItem {
+  rank: number
+  display_name: string
+  invite_count: number
+  effective_invite_count: number
+  recharge_quota: number
+  rebate_quota: number
 }
 
 /**

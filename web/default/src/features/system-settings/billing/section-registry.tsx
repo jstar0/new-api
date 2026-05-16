@@ -6,6 +6,7 @@ import { PaymentSettingsSection } from '../integrations/payment-settings-section
 import { RatioSettingsCard } from '../models/ratio-settings-card'
 import type { BillingSettings } from '../types'
 import { createSectionRegistry } from '../utils/section-registry'
+import { LeaderboardDisplaySettingsSection } from './leaderboard-display-settings-section'
 import { UsageRewardSettingsSection } from './usage-reward-settings-section'
 
 const getModelDefaults = (settings: BillingSettings) => ({
@@ -54,6 +55,16 @@ const BILLING_SECTIONS = [
               settings['quota_setting.enable_free_model_pre_consume'],
           },
         }}
+      />
+    ),
+  },
+  {
+    id: 'leaderboard-display',
+    titleKey: '排行榜展示',
+    descriptionKey: '控制用户端排行榜展示与额度消耗榜统计口径',
+    build: (settings: BillingSettings) => (
+      <LeaderboardDisplaySettingsSection
+        defaultValue={settings['leaderboard_setting.config']}
       />
     ),
   },

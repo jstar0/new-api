@@ -372,6 +372,10 @@ func GetAffCode(c *gin.Context) {
 }
 
 func GetAffLeaderboard(c *gin.Context) {
+	if !model.GetLeaderboardSettings().AffEnabled {
+		common.ApiSuccess(c, []model.AffLeaderboardItem{})
+		return
+	}
 	limit := 10
 	if rawLimit := c.Query("limit"); rawLimit != "" {
 		parsedLimit, err := strconv.Atoi(rawLimit)
@@ -394,6 +398,10 @@ func GetAffLeaderboard(c *gin.Context) {
 }
 
 func GetTopUpLeaderboard(c *gin.Context) {
+	if !model.GetLeaderboardSettings().TopUpEnabled {
+		common.ApiSuccess(c, []model.TopUpLeaderboardItem{})
+		return
+	}
 	limit := 10
 	if rawLimit := c.Query("limit"); rawLimit != "" {
 		parsedLimit, err := strconv.Atoi(rawLimit)
@@ -416,6 +424,11 @@ func GetTopUpLeaderboard(c *gin.Context) {
 }
 
 func GetUsageLeaderboard(c *gin.Context) {
+	leaderboardSettings := model.GetLeaderboardSettings()
+	if !leaderboardSettings.UsageEnabled {
+		common.ApiSuccess(c, []model.UsageLeaderboardItem{})
+		return
+	}
 	limit := 10
 	if rawLimit := c.Query("limit"); rawLimit != "" {
 		parsedLimit, err := strconv.Atoi(rawLimit)
@@ -429,7 +442,7 @@ func GetUsageLeaderboard(c *gin.Context) {
 		limit = 10
 	}
 
-	leaderboard, err := model.GetUsageLeaderboard(limit, c.DefaultQuery("period", model.UsageLeaderboardPeriodDay))
+	leaderboard, err := model.GetUsageLeaderboardByMetric(limit, c.DefaultQuery("period", model.UsageLeaderboardPeriodDay), leaderboardSettings.UsageMetric)
 	if err != nil {
 		common.ApiError(c, err)
 		return
@@ -439,6 +452,10 @@ func GetUsageLeaderboard(c *gin.Context) {
 
 func GetUsageRewardSetting(c *gin.Context) {
 	common.ApiSuccess(c, model.GetUsageRewardSettings())
+}
+
+func GetLeaderboardSetting(c *gin.Context) {
+	common.ApiSuccess(c, model.GetLeaderboardSettings())
 }
 
 func GetUsageRewards(c *gin.Context) {

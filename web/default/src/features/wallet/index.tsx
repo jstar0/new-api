@@ -4,7 +4,12 @@ import { getSelf } from '@/lib/api'
 import { useStatus } from '@/hooks/use-status'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { SectionPageLayout } from '@/components/layout'
-import { getUsageRewards } from './api'
+import {
+  getAffiliateLeaderboard,
+  getLeaderboardSetting,
+  getTopUpLeaderboard,
+  getUsageRewards,
+} from './api'
 import { AffiliateRewardsCard } from './components/affiliate-rewards-card'
 import { BillingHistoryDialog } from './components/dialogs/billing-history-dialog'
 import { CreemConfirmDialog } from './components/dialogs/creem-confirm-dialog'
@@ -13,6 +18,7 @@ import { TransferDialog } from './components/dialogs/transfer-dialog'
 import { RechargeFormCard } from './components/recharge-form-card'
 import { SubscriptionPlansCard } from './components/subscription-plans-card'
 import { UsageRewardsCard } from './components/usage-rewards-card'
+import { WalletLeaderboardsCard } from './components/wallet-leaderboards-card'
 import { WalletStatsCard } from './components/wallet-stats-card'
 import { DEFAULT_DISCOUNT_RATE } from './constants'
 import {
@@ -35,10 +41,20 @@ import type {
   PaymentMethod,
   PresetAmount,
   CreemProduct,
+  LeaderboardSettings,
+  TopUpLeaderboardItem,
+  AffiliateLeaderboardItem,
 } from './types'
 
 interface WalletProps {
   initialShowHistory?: boolean
+}
+
+const DEFAULT_LEADERBOARD_SETTINGS: LeaderboardSettings = {
+  topup_enabled: true,
+  aff_enabled: true,
+  usage_enabled: true,
+  usage_metric: 'quota',
 }
 
 export function Wallet(props: WalletProps) {
@@ -47,6 +63,14 @@ export function Wallet(props: WalletProps) {
   const [userLoading, setUserLoading] = useState(true)
   const [usageRewards, setUsageRewards] = useState<UsageRewardRecord[]>([])
   const [usageRewardsLoading, setUsageRewardsLoading] = useState(true)
+  const [leaderboardSettings, setLeaderboardSettings] =
+    useState<LeaderboardSettings>(DEFAULT_LEADERBOARD_SETTINGS)
+  const [topUpLeaderboard, setTopUpLeaderboard] = useState<
+    TopUpLeaderboardItem[]
+  >([])
+  const [affiliateLeaderboard, setAffiliateLeaderboard] = useState<
+    AffiliateLeaderboardItem[]
+  >([])
   const [topupAmount, setTopupAmount] = useState(0)
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null)
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
@@ -121,10 +145,33 @@ export function Wallet(props: WalletProps) {
     }
   }, [])
 
+  const fetchLeaderboards = useCallback(async () => {
+    try {
+      const settingResponse = await getLeaderboardSetting()
+      const settings = settingResponse.data ?? DEFAULT_LEADERBOARD_SETTINGS
+      setLeaderboardSettings(settings)
+
+      const [topUpResponse, affiliateResponse] = await Promise.all([
+        settings.topup_enabled
+          ? getTopUpLeaderboard(10)
+          : Promise.resolve({ success: true, data: [] }),
+        settings.aff_enabled
+          ? getAffiliateLeaderboard(10)
+          : Promise.resolve({ success: true, data: [] }),
+      ])
+      setTopUpLeaderboard(topUpResponse.data ?? [])
+      setAffiliateLeaderboard(affiliateResponse.data ?? [])
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to fetch wallet leaderboards:', error)
+    }
+  }, [])
+
   useEffect(() => {
     fetchUser()
     fetchUsageRewards()
-  }, [fetchUser, fetchUsageRewards])
+    fetchLeaderboards()
+  }, [fetchUser, fetchUsageRewards, fetchLeaderboards])
 
   useEffect(() => {
     if (props.initialShowHistory) {
@@ -327,6 +374,12 @@ export function Wallet(props: WalletProps) {
               affiliateLink={affiliateLink}
               onTransfer={() => setTransferDialogOpen(true)}
               loading={affiliateLoading}
+            />
+
+            <WalletLeaderboardsCard
+              settings={leaderboardSettings}
+              topUpItems={topUpLeaderboard}
+              affiliateItems={affiliateLeaderboard}
             />
           </div>
         </SectionPageLayout.Content>

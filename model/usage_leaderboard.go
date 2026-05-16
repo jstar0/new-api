@@ -38,21 +38,37 @@ type usageLeaderboardUserName struct {
 }
 
 func GetUsageLeaderboard(limit int, period string) ([]UsageLeaderboardItem, error) {
-	return getUsageLeaderboard(limit, period, time.Now())
+	return GetUsageLeaderboardByMetric(limit, period, UsageLeaderboardMetricQuota)
+}
+
+func GetUsageLeaderboardByMetric(limit int, period string, metric string) ([]UsageLeaderboardItem, error) {
+	return getUsageLeaderboardByMetric(limit, period, metric, time.Now())
 }
 
 func getUsageLeaderboard(limit int, period string, now time.Time) ([]UsageLeaderboardItem, error) {
 	since := usageLeaderboardStartTime(period, now)
-	return getUsageLeaderboardInRange(limit, since, 0)
+	return getUsageLeaderboardInRange(limit, since, 0, UsageLeaderboardMetricQuota)
+}
+
+func getUsageLeaderboardByMetric(limit int, period string, metric string, now time.Time) ([]UsageLeaderboardItem, error) {
+	since := usageLeaderboardStartTime(period, now)
+	return getUsageLeaderboardInRange(limit, since, 0, metric)
 }
 
 func getUsageLeaderboardBetween(limit int, start int64, end int64) ([]UsageLeaderboardItem, error) {
-	return getUsageLeaderboardInRange(limit, start, end)
+	return getUsageLeaderboardInRange(limit, start, end, UsageLeaderboardMetricQuota)
 }
 
-func getUsageLeaderboardInRange(limit int, start int64, end int64) ([]UsageLeaderboardItem, error) {
+func getUsageLeaderboardInRange(limit int, start int64, end int64, metric string) ([]UsageLeaderboardItem, error) {
 	if limit <= 0 || limit > 50 {
 		limit = 10
+	}
+	metric = normalizeUsageLeaderboardMetric(metric)
+	havingClause := "HAVING SUM(COALESCE(quota, 0)) > 0"
+	orderClause := "ORDER BY consume_quota DESC, request_count DESC, consume_tokens DESC, latest_consume_time DESC, user_id ASC"
+	if metric == UsageLeaderboardMetricRequests {
+		havingClause = "HAVING COUNT(*) > 0"
+		orderClause = "ORDER BY request_count DESC, consume_quota DESC, consume_tokens DESC, latest_consume_time DESC, user_id ASC"
 	}
 
 	whereCreatedAt := ""
@@ -81,8 +97,8 @@ WHERE user_id > 0
 	AND type = ?
 `+whereCreatedAt+`
 GROUP BY user_id
-HAVING SUM(COALESCE(quota, 0)) > 0
-ORDER BY consume_quota DESC, request_count DESC, consume_tokens DESC, latest_consume_time DESC, user_id ASC
+`+havingClause+`
+`+orderClause+`
 LIMIT ?`,
 		args...,
 	).Scan(&rows).Error
@@ -158,5 +174,14 @@ func normalizeUsageLeaderboardPeriod(period string) string {
 		return UsageLeaderboardPeriodMonth
 	default:
 		return UsageLeaderboardPeriodAll
+	}
+}
+
+func normalizeUsageLeaderboardMetric(metric string) string {
+	switch strings.ToLower(strings.TrimSpace(metric)) {
+	case UsageLeaderboardMetricRequests, "request", "count", "rpm":
+		return UsageLeaderboardMetricRequests
+	default:
+		return UsageLeaderboardMetricQuota
 	}
 }
