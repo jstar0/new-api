@@ -40,6 +40,10 @@ func OaiResponsesHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http
 		c.Set("image_generation_call_size", responsesResponse.GetSize())
 	}
 
+	if normalizedBody, ok := dto.NormalizeResponsesObjectArgumentsJSON(responseBody); ok {
+		responseBody = normalizedBody
+	}
+
 	// 写入新的 response body
 	service.IOCopyBytesGracefully(c, resp, responseBody)
 

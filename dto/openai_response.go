@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
@@ -9,7 +10,14 @@ import (
 )
 
 const (
+	ResponsesOutputTypeToolSearchCall      = "tool_search_call"
+	ResponsesOutputTypeWebSearchCall       = "web_search_call"
+	ResponsesOutputTypeFileSearchCall      = "file_search_call"
+	ResponsesOutputTypeLocalShellCall      = "local_shell_call"
+	ResponsesOutputTypeComputerCall        = "computer_call"
 	ResponsesOutputTypeImageGenerationCall = "image_generation_call"
+	ResponsesOutputTypeCodeInterpreterCall = "code_interpreter_call"
+	ResponsesOutputTypeMcpCall             = "mcp_call"
 )
 
 type SimpleResponse struct {
@@ -361,6 +369,146 @@ func (r *ResponsesOutput) ArgumentsString() string {
 // ResponsesArgumentsString returns function call arguments in the string form expected by Chat Completions.
 func ResponsesArgumentsString(arguments json.RawMessage) string {
 	return common.JsonRawMessageToString(arguments)
+}
+
+// ResponsesObjectArgumentItemTypes are Responses built-in tool call item types
+// whose arguments are consumed as structured JSON by Codex clients.
+var ResponsesObjectArgumentItemTypes = map[string]bool{
+	ResponsesOutputTypeToolSearchCall:      true,
+	ResponsesOutputTypeWebSearchCall:       true,
+	ResponsesOutputTypeFileSearchCall:      true,
+	ResponsesOutputTypeLocalShellCall:      true,
+	ResponsesOutputTypeComputerCall:        true,
+	ResponsesOutputTypeImageGenerationCall: true,
+	ResponsesOutputTypeCodeInterpreterCall: true,
+	ResponsesOutputTypeMcpCall:             true,
+}
+
+func IsResponsesObjectArgumentItemType(itemType string) bool {
+	return ResponsesObjectArgumentItemTypes[itemType]
+}
+
+func NormalizeResponsesObjectArgumentsJSON(data []byte) ([]byte, bool) {
+	var payload map[string]json.RawMessage
+	if err := json.Unmarshal(data, &payload); err != nil {
+		return data, false
+	}
+	if !normalizeResponsesPayloadArguments(payload) {
+		return data, false
+	}
+	normalized, err := json.Marshal(payload)
+	if err != nil {
+		return data, false
+	}
+	return normalized, true
+}
+
+func normalizeResponsesPayloadArguments(payload map[string]json.RawMessage) bool {
+	changed := false
+
+	if itemRaw, ok := payload["item"]; ok {
+		item, ok := unmarshalResponsesRawObject(itemRaw)
+		if ok && normalizeResponsesOutputArguments(item) {
+			if normalized, err := json.Marshal(item); err == nil {
+				payload["item"] = normalized
+				changed = true
+			}
+		}
+	}
+
+	if responseRaw, ok := payload["response"]; ok {
+		response, ok := unmarshalResponsesRawObject(responseRaw)
+		if ok && normalizeResponsesResponseOutputArguments(response) {
+			if normalized, err := json.Marshal(response); err == nil {
+				payload["response"] = normalized
+				changed = true
+			}
+		}
+	}
+
+	if normalizeResponsesResponseOutputArguments(payload) {
+		changed = true
+	}
+
+	return changed
+}
+
+func normalizeResponsesResponseOutputArguments(response map[string]json.RawMessage) bool {
+	outputRaw, ok := response["output"]
+	if !ok {
+		return false
+	}
+	var outputs []map[string]json.RawMessage
+	if err := json.Unmarshal(outputRaw, &outputs); err != nil {
+		return false
+	}
+	changed := false
+	for i := range outputs {
+		if normalizeResponsesOutputArguments(outputs[i]) {
+			changed = true
+		}
+	}
+	if !changed {
+		return false
+	}
+	normalized, err := json.Marshal(outputs)
+	if err != nil {
+		return false
+	}
+	response["output"] = normalized
+	return true
+}
+
+func normalizeResponsesOutputArguments(item map[string]json.RawMessage) bool {
+	itemType := rawJSONString(item["type"])
+	if !IsResponsesObjectArgumentItemType(itemType) {
+		return false
+	}
+	arguments, ok := item["arguments"]
+	if !ok {
+		return false
+	}
+	normalized, ok := normalizeStringifiedCompositeJSON(arguments)
+	if !ok {
+		return false
+	}
+	item["arguments"] = normalized
+	return true
+}
+
+func normalizeStringifiedCompositeJSON(value json.RawMessage) (json.RawMessage, bool) {
+	trimmed := bytes.TrimSpace(value)
+	if len(trimmed) == 0 || trimmed[0] != '"' {
+		return value, false
+	}
+	var decoded string
+	if err := json.Unmarshal(trimmed, &decoded); err != nil {
+		return value, false
+	}
+	inner := bytes.TrimSpace([]byte(decoded))
+	if len(inner) == 0 || !json.Valid(inner) {
+		return value, false
+	}
+	if inner[0] != '{' && inner[0] != '[' {
+		return value, false
+	}
+	return json.RawMessage(append([]byte(nil), inner...)), true
+}
+
+func unmarshalResponsesRawObject(raw json.RawMessage) (map[string]json.RawMessage, bool) {
+	var obj map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &obj); err != nil {
+		return nil, false
+	}
+	return obj, true
+}
+
+func rawJSONString(raw json.RawMessage) string {
+	var value string
+	if err := json.Unmarshal(raw, &value); err != nil {
+		return ""
+	}
+	return value
 }
 
 type ResponsesOutputContent struct {

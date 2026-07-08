@@ -206,5 +206,8 @@ func sendResponsesStreamData(c *gin.Context, streamResponse dto.ResponsesStreamR
 	if data == "" {
 		return
 	}
+	if normalizedData, ok := dto.NormalizeResponsesObjectArgumentsJSON(common.StringToByteSlice(data)); ok {
+		data = string(normalizedData)
+	}
 	_ = helper.ResponseChunkData(c, streamResponse, data)
 }
